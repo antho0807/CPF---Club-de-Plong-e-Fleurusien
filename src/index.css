@@ -1,0 +1,262 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0077b6;
+  --color-primary-dark: #005f8e;
+  --color-secondary: #00b4d8;
+  --color-accent: #90e0ef;
+  --color-danger: #e63946;
+  --color-warning: #f4a261;
+  --color-success: #2a9d8f;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --radius: 0.5rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: #f8fafc;
+  color: #0f172a;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+
+/* ─── react-big-calendar — Design moderne ─── */
+
+.rbc-calendar {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+/* Toolbar custom — conteneur fourni par RBC */
+.rbc-toolbar {
+  padding: 0;
+  margin-bottom: 0;
+  flex-wrap: wrap;
+}
+
+/* En-têtes des jours */
+.rbc-month-header {
+  background-color: #f9fafb;
+}
+
+.rbc-header {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  padding: 8px 4px;
+  border-bottom: none !important;
+}
+
+.rbc-header + .rbc-header {
+  border-left: 1px solid #f1f5f9 !important;
+}
+
+/* Cellules de dates */
+.rbc-date-cell {
+  text-align: right;
+  padding: 4px 8px 2px;
+}
+
+.rbc-date-cell .rbc-button-link {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #374151;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  transition: background-color 0.15s;
+}
+
+.rbc-date-cell .rbc-button-link:hover {
+  background-color: #f3f4f6;
+}
+
+/* Aujourd'hui */
+.rbc-today {
+  background-color: #f0f9ff !important;
+}
+
+.rbc-today .rbc-button-link {
+  background-color: #0077b6 !important;
+  color: #fff !important;
+}
+
+/* Pills d'événements */
+.rbc-event {
+  border-radius: 4px !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.rbc-event:focus {
+  outline: none;
+}
+
+.rbc-event-label {
+  display: none;
+}
+
+.rbc-row-segment {
+  padding: 0 2px 2px;
+}
+
+/* Grille du mois */
+.rbc-month-view {
+  border: none !important;
+}
+
+.rbc-month-row {
+  border-top: 1px solid #f1f5f9;
+  min-height: 80px;
+}
+
+.rbc-day-bg {
+  transition: background-color 0.1s;
+}
+
+.rbc-day-bg:hover {
+  background-color: #fafafa;
+}
+
+.rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid #f1f5f9 !important;
+}
+
+.rbc-off-range-bg {
+  background-color: #f9fafb;
+}
+
+.rbc-off-range .rbc-button-link {
+  color: #d1d5db !important;
+}
+
+/* "+N autres" */
+.rbc-show-more {
+  color: #0077b6;
+  font-size: 0.68rem;
+  font-weight: 500;
+  padding: 1px 4px;
+  background: transparent;
+}
+
+/* ─── Vue Agenda ─── */
+.rbc-agenda-view table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rbc-agenda-date-cell {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  padding: 10px 16px;
+  border-top: 1px solid #f1f5f9;
+  min-width: 90px;
+  vertical-align: top;
+}
+
+.rbc-agenda-time-cell {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  padding: 10px 12px;
+  border-top: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+
+.rbc-agenda-event-cell {
+  padding: 8px 16px;
+  border-top: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+
+.rbc-agenda-event-cell .rbc-event {
+  display: inline-block;
+}
+
+.rbc-agenda-empty {
+  padding: 32px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+/* ─── Vue Semaine ─── */
+.rbc-time-view {
+  border: none !important;
+}
+
+.rbc-time-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid #f1f5f9;
+  min-height: 40px;
+}
+
+.rbc-time-gutter .rbc-timeslot-group {
+  font-size: 0.68rem;
+  color: #9ca3af;
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-top: 1px dashed #f1f5f9;
+}
+
+.rbc-current-time-indicator {
+  background-color: #0077b6;
+}
+
+/* ─── Mobile ─── */
+@media (max-width: 640px) {
+  .rbc-month-row {
+    min-height: 60px;
+  }
+
+  .rbc-date-cell {
+    padding: 2px 4px;
+  }
+
+  .rbc-agenda-date-cell,
+  .rbc-agenda-time-cell,
+  .rbc-agenda-event-cell {
+    padding: 8px;
+  }
+
+  .rbc-header {
+    font-size: 0.6rem;
+    padding: 6px 2px;
+  }
+}
