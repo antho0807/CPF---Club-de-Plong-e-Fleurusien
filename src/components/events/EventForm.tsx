@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Loader2 } from 'lucide-react'
+import { Loader2, AlertCircle } from 'lucide-react'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 import { Label } from '../ui/label'
@@ -15,7 +15,7 @@ interface FormData {
   title: string
   event_type: string
   date_start: string
-  date_end: string
+  meeting_time: string       // ← remplace date_end
   registration_deadline: string
   location_id: string
   max_participants: string
@@ -38,6 +38,7 @@ interface Props {
 export function EventForm({ initial, createdBy, creatorRole = 'membre', creatorBrevet = null, onSubmit, onCancel }: Props) {
   const [sites, setSites] = useState<DiveSite[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const allowedTypes = getCreatableEventTypes(creatorRole, creatorBrevet)
 
   useEffect(() => {
@@ -48,9 +49,9 @@ export function EventForm({ initial, createdBy, creatorRole = 'membre', creatorB
   const { register, handleSubmit, setValue, watch } = useForm<FormData>({
     defaultValues: {
       title: initial?.title ?? '',
-      event_type: initial?.event_type ?? 'sortie_mer',
+      event_type: initial?.event_type ?? (allowedTypes[0] ?? 'sortie_mer'),
       date_start: initial?.date_start ? initial.date_start.slice(0, 16) : '',
-      date_end: initial?.date_end ? initial.date_end.slice(0, 16) : '',
+      meeting_time: '',
       registration_deadline: initial?.registration_deadline ? initial.registration_deadline.slice(0, 16) : '',
       location_id: initial?.location_id ?? '',
       max_participants: initial?.max_participants?.toString() ?? '',
@@ -64,31 +65,51 @@ export function EventForm({ initial, createdBy, creatorRole = 'membre', creatorB
 
   const eventType = watch('event_type')
   const locationId = watch('location_id')
-  const minBrevet = watch('min_brevet')
+  const minBrevet  = watch('min_brevet')
 
   async function submit(data: FormData) {
     if (!data.title || !data.date_start) return
     setSubmitting(true)
-    await onSubmit({
-      title: data.title,
-      event_type: data.event_type as EventType,
-      date_start: new Date(data.date_start).toISOString(),
-      date_end: data.date_end ? new Date(data.date_end).toISOString() : null,
-      registration_deadline: data.registration_deadline ? new Date(data.registration_deadline).toISOString() : null,
-      location_id: data.location_id || null,
-      max_participants: data.max_participants ? parseInt(data.max_participants) : null,
-      min_brevet: (data.min_brevet as BrevetLevel) || null,
-      description: data.description || null,
-      meeting_point: data.meeting_point || null,
-      carpooling_info: data.carpooling_info || null,
-      equipment_needed: data.equipment_needed || null,
-      created_by: createdBy,
-    })
-    setSubmitting(false)
+    setSubmitError(null)
+    console.log('[EventForm] submit start', data)
+    try {
+      await onSubmit({
+        title: data.title,
+        event_type: data.event_type as EventType,
+        date_start: new Date(data.date_start).toISOString(),
+        date_end: null,                     // plus utilisé
+        registration_deadline: data.registration_deadline ? new Date(data.registration_deadline).toISOString() : null,
+        location_id: data.location_id || null,
+        max_participants: data.max_participants ? parseInt(data.max_participants) : null,
+        min_brevet: (data.min_brevet as BrevetLevel) || null,
+        description: data.description || null,
+        meeting_point: data.meeting_point || null,
+        carpooling_info: data.carpooling_info || null,
+        equipment_needed: data.equipment_needed || null,
+        created_by: createdBy,
+        // meeting_time via cast any car colonne peut ne pas être dans les types
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...((data.meeting_time ? { meeting_time: data.meeting_time } : {}) as any),
+      })
+      console.log('[EventForm] submit success')
+    } catch (e: unknown) {
+      console.error('[EventForm] submit error:', e)
+      setSubmitError(e instanceof Error ? e.message : 'Erreur lors de la création. Vérifiez la console.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-4">
+      {/* Message d'erreur visible */}
+      {submitError && (
+        <div className="flex gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+          <span>{submitError}</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
           <Label>Titre *</Label>
@@ -127,17 +148,13 @@ export function EventForm({ initial, createdBy, creatorRole = 'membre', creatorB
         </div>
 
         <div>
-          <Label>Fin</Label>
-          <Input type="datetime-local" className="mt-1" {...register('date_end')} />
+          <Label>🕐 Heure du RDV sur place <span className="text-gray-400 text-xs">(optionnel)</span></Label>
+          <Input type="time" className="mt-1" {...register('meeting_time')} />
         </div>
 
         <div className="sm:col-span-2">
           <Label>Deadline d'inscription</Label>
-          <Input
-            type="datetime-local"
-            className="mt-1"
-            {...register('registration_deadline')}
-          />
+          <Input type="datetime-local" className="mt-1" {...register('registration_deadline')} />
           <p className="text-xs text-gray-400 mt-1">Après cette date, les inscriptions seront fermées automatiquement.</p>
         </div>
 
@@ -175,9 +192,7 @@ export function EventForm({ initial, createdBy, creatorRole = 'membre', creatorB
       </div>
 
       <div>
-        <Label>
-          {eventType === 'entrainement_piscine' ? 'Exercices prévus' : 'Équipement requis'}
-        </Label>
+        <Label>{eventType === 'entrainement_piscine' ? 'Exercices prévus' : 'Équipement requis'}</Label>
         <Textarea
           className="mt-1"
           rows={2}

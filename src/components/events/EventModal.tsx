@@ -217,8 +217,13 @@ export function EventModal({ event, open, onClose }: Props) {
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Calendar className="h-4 w-4 text-gray-400" />
               {formatDateTime(ev.date_start)}
-              {ev.date_end && <> → {formatDateTime(ev.date_end)}</>}
             </div>
+            {(ev as unknown as { meeting_time?: string }).meeting_time && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Clock className="h-4 w-4 text-gray-400" />
+                {'📍 RDV sur place : ' + (ev as unknown as { meeting_time: string }).meeting_time.slice(0, 5).replace(':', 'h')}
+              </div>
+            )}
 
             {ev.registration_deadline && (
               <div className={`flex items-center gap-2 text-sm ${deadlinePassed ? 'text-red-600' : 'text-orange-600'}`}>
