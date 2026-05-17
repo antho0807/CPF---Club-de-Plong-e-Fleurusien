@@ -18,6 +18,7 @@ import {
   BREVET_ORDER,
 } from '../../lib/compliance'
 import { EVENT_TYPE_LABELS, formatDateTime, formatDate } from '../../lib/utils'
+import { EventForm } from './EventForm'
 import type { Event, EventExercise, BrevetLevel } from '../../types/database.types'
 
 interface Props {
@@ -708,6 +709,26 @@ export function EventModal({ event, open, onClose }: Props) {
       </DialogContent>
     </Dialog>
 
+    {/* ── Dialog modification événement ── */}
+    <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Modifier l'événement</DialogTitle>
+        </DialogHeader>
+        <EventForm
+          initial={ev}
+          createdBy={memberId}
+          creatorRole={profile?.role}
+          creatorBrevet={profile?.brevet_level}
+          onSubmit={async (data) => {
+            await updateEvent(ev.id, data)
+            setShowEditForm(false)
+          }}
+          onCancel={() => setShowEditForm(false)}
+        />
+      </DialogContent>
+    </Dialog>
+
     {/* ── Dialog annulation événement ── */}
     <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
       <DialogContent className="max-w-sm">
@@ -721,13 +742,23 @@ export function EventModal({ event, open, onClose }: Props) {
           onChange={(e) => setCancelReason(e.target.value)}
           className="mt-2"
         />
+        {message && message.includes('erreur') && (
+          <p className="text-xs text-red-500 mt-1">{message}</p>
+        )}
         <div className="flex gap-3 justify-end mt-2">
           <Button variant="outline" onClick={() => setShowCancelConfirm(false)}>Annuler</Button>
-          <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={async () => {
-            await cancelEvent(ev.id, cancelReason || 'Annulé par l\'organisateur')
-            setShowCancelConfirm(false)
-            onClose()
-          }}>
+          <Button
+            className="bg-red-600 hover:bg-red-700 text-white"
+            onClick={async () => {
+              try {
+                await cancelEvent(ev.id, cancelReason || 'Annulé par l\'organisateur')
+                setShowCancelConfirm(false)
+                onClose()
+              } catch (e) {
+                setMessage('Erreur : ' + (e instanceof Error ? e.message : String(e)))
+              }
+            }}
+          >
             Confirmer l'annulation
           </Button>
         </div>
