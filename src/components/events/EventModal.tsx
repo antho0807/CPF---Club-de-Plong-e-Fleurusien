@@ -84,9 +84,9 @@ const RECOMMENDED: Partial<Record<BrevetLevel, { title: string; description: str
 }
 
 export function EventModal({ event, open, onClose }: Props) {
-  const { profile, isMoniteur } = useAuth()
+  const { profile, isMoniteur, isAdmin } = useAuth()
   const { compliance } = useCompliance(profile?.id, profile?.brevet_level)
-  const { validateRegistration, registerToEvent, unregisterFromEvent } = useEvents()
+  const { validateRegistration, registerToEvent, unregisterFromEvent, cancelEvent, updateEvent } = useEvents()
   const { exercises, addExercise, removeExercise } = useEventExercises(event?.id ?? null)
   const { progress, setStatus: setProgressStatus, validate: validateProgress } = useMemberProgress(
     profile?.id ?? null,
@@ -100,6 +100,9 @@ export function EventModal({ event, open, onClose }: Props) {
   const [newExTitle, setNewExTitle] = useState('')
   const [newExBrevet, setNewExBrevet] = useState<BrevetLevel | ''>('')
   const [showUnregisterConfirm, setShowUnregisterConfirm] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
+  const [showEditForm, setShowEditForm] = useState(false)
   const [creator, setCreator] = useState<{ full_name: string; alias: string | null } | null>(null)
 
   // Charger le profil du créateur
@@ -113,6 +116,9 @@ export function EventModal({ event, open, onClose }: Props) {
 
   const ev = event
   const memberId = profile.id
+  // Organisateur = créateur de l'événement ou responsable assigné
+  const isOrganizer = ev.created_by === profile.id || ev.organizer_id === profile.id
+  const canManage = isMoniteur || isOrganizer || isAdmin
   const registrations = ev.event_registrations ?? []
   const myRegistration = registrations.find((r) => r.member_id === memberId)
   const isRegistered = !!myRegistration
@@ -214,7 +220,7 @@ export function EventModal({ event, open, onClose }: Props) {
         <Tabs defaultValue="details">
           <TabsList className="w-full">
             <TabsTrigger value="details" className="flex-1 text-xs">Détails</TabsTrigger>
-            {isMoniteur && (
+            {canManage && (
               <TabsTrigger value="registrations" className="flex-1 text-xs">
                 Inscriptions
                 {registrations.filter((r) => r.status === 'pending').length > 0 && (
@@ -224,13 +230,13 @@ export function EventModal({ event, open, onClose }: Props) {
                 )}
               </TabsTrigger>
             )}
-            {isMoniteur && (
+            {canManage && (
               <TabsTrigger value="exercises" className="flex-1 text-xs">Exercices</TabsTrigger>
             )}
-            {isConfirmed && !isMoniteur && (
+            {isConfirmed && !canManage && (
               <TabsTrigger value="exercises" className="flex-1 text-xs">Ma progression</TabsTrigger>
             )}
-            {(isConfirmed || isMoniteur) && (
+            {(isConfirmed || canManage) && (
               <TabsTrigger value="messages" className="flex-1 text-xs">Messages</TabsTrigger>
             )}
           </TabsList>
@@ -393,6 +399,18 @@ export function EventModal({ event, open, onClose }: Props) {
             )}
             {ev.is_cancelled && <Button variant="ghost" className="w-full" onClick={onClose}>Fermer</Button>}
 
+            {/* Boutons organisateur */}
+            {canManage && !ev.is_cancelled && (
+              <div className="flex gap-2 pt-2 border-t">
+                <Button size="sm" variant="outline" className="gap-1.5 flex-1" onClick={() => setShowEditForm(true)}>
+                  ✏️ Modifier
+                </Button>
+                <Button size="sm" variant="outline" className="gap-1.5 flex-1 text-red-600 border-red-200 hover:bg-red-50" onClick={() => setShowCancelConfirm(true)}>
+                  🚫 Annuler l'événement
+                </Button>
+              </div>
+            )}
+
             {/* ── Plongeurs confirmés ── */}
             {(() => {
               const confirmed = registrations.filter((r) => r.status === 'confirmed')
@@ -413,7 +431,7 @@ export function EventModal({ event, open, onClose }: Props) {
                       </span>
                     </div>
                   </div>
-                  {isMoniteur ? (
+                  {canManage ? (
                     <div className="space-y-1.5">
                       {confirmed.map((reg) => {
                         const mp = reg.profiles as { full_name?: string; alias?: string; brevet_level?: string } | undefined
@@ -451,7 +469,7 @@ export function EventModal({ event, open, onClose }: Props) {
           </TabsContent>
 
           {/* ── Onglet Inscriptions (organisateur) ── */}
-          {isMoniteur && (
+          {canManage && (
             <TabsContent value="registrations" className="pt-3 space-y-3">
               <p className="text-sm font-semibold text-gray-700">
                 {registrations.length} demande(s) — {registrations.filter((r) => r.status === 'confirmed').length} confirmée(s)
@@ -507,7 +525,7 @@ export function EventModal({ event, open, onClose }: Props) {
           {/* ── Onglet Exercices ── */}
           <TabsContent value="exercises" className="pt-3 space-y-4">
             {/* Section organisateur : ajouter des exercices */}
-            {isMoniteur && (
+            {canManage && (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ajouter un exercice</p>
                 <div className="flex gap-2 flex-wrap">
@@ -555,7 +573,7 @@ export function EventModal({ event, open, onClose }: Props) {
             )}
 
             {/* Exercices recommandés selon le niveau du membre */}
-            {!isMoniteur && recommended.length > 0 && (
+            {!canManage && recommended.length > 0 && (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Exercices recommandés — progression vers {
@@ -598,7 +616,7 @@ export function EventModal({ event, open, onClose }: Props) {
             )}
 
             {/* Exercices ajoutés par l'organisateur */}
-            {!isMoniteur && exercises.length > 0 && (
+            {!canManage && exercises.length > 0 && (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Exercices de la séance</p>
                 {exercises.map((ex: EventExercise) => {
@@ -638,7 +656,7 @@ export function EventModal({ event, open, onClose }: Props) {
           </TabsContent>
 
           {/* ── Onglet Messages ── */}
-          {(isConfirmed || isMoniteur) && (
+          {(isConfirmed || canManage) && (
             <TabsContent value="messages" className="pt-3 space-y-3">
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                 {messages.length === 0 && (
@@ -687,6 +705,32 @@ export function EventModal({ event, open, onClose }: Props) {
             </TabsContent>
           )}
         </Tabs>
+      </DialogContent>
+    </Dialog>
+
+    {/* ── Dialog annulation événement ── */}
+    <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-red-600">Annuler l'événement ?</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-gray-600">Cette action est visible par tous les participants.</p>
+        <Input
+          placeholder="Raison de l'annulation (optionnel)"
+          value={cancelReason}
+          onChange={(e) => setCancelReason(e.target.value)}
+          className="mt-2"
+        />
+        <div className="flex gap-3 justify-end mt-2">
+          <Button variant="outline" onClick={() => setShowCancelConfirm(false)}>Annuler</Button>
+          <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={async () => {
+            await cancelEvent(ev.id, cancelReason || 'Annulé par l\'organisateur')
+            setShowCancelConfirm(false)
+            onClose()
+          }}>
+            Confirmer l'annulation
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
 
