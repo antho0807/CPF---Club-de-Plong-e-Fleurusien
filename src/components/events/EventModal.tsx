@@ -113,14 +113,19 @@ export function EventModal({ event, open, onClose }: Props) {
       .then(({ data }) => data && setCreator(data as { full_name: string; alias: string | null }))
   }, [event?.created_by])
 
+  // Registrations en état local pour mise à jour immédiate après (dé)inscription
+  const [localRegs, setLocalRegs] = useState(event?.event_registrations ?? [])
+  useEffect(() => {
+    setLocalRegs(event?.event_registrations ?? [])
+  }, [event?.event_registrations])
+
   if (!event || !profile) return null
 
   const ev = event
   const memberId = profile.id
-  // Organisateur = créateur de l'événement ou responsable assigné
   const isOrganizer = ev.created_by === profile.id || ev.organizer_id === profile.id
   const canManage = isMoniteur || isOrganizer || isAdmin
-  const registrations = ev.event_registrations ?? []
+  const registrations = localRegs
   const myRegistration = registrations.find((r) => r.member_id === memberId)
   const isRegistered = !!myRegistration
   const myStatus = myRegistration?.status ?? null
@@ -162,9 +167,12 @@ export function EventModal({ event, open, onClose }: Props) {
     try {
       if (isRegistered) {
         await unregisterFromEvent(ev.id, memberId)
+        setLocalRegs((prev) => prev.filter((r) => r.member_id !== memberId))
         setMessage('Désinscrit avec succès.')
       } else {
         await registerToEvent(ev.id, memberId, profile?.full_name)
+        // Ajouter une registration pending locale immédiatement
+        setLocalRegs((prev) => [...prev, { id: 'tmp', event_id: ev.id, member_id: memberId, registered_at: new Date().toISOString(), status: 'pending' } as typeof prev[0]])
         setMessage('Demande envoyée — en attente de validation par l\'organisateur.')
       }
     } catch {
@@ -178,6 +186,7 @@ export function EventModal({ event, open, onClose }: Props) {
     setLoading(true)
     try {
       await unregisterFromEvent(ev.id, memberId)
+      setLocalRegs((prev) => prev.filter((r) => r.member_id !== memberId))
       setMessage('Désinscrit avec succès.')
     } catch {
       setMessage('Une erreur est survenue. Réessayez.')
