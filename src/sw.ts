@@ -3,6 +3,10 @@ import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
 
 declare const self: ServiceWorkerGlobalScope
 
+// Activer immédiatement sans attendre la fermeture des onglets
+self.addEventListener('install', () => self.skipWaiting())
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
+
 cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)
 
