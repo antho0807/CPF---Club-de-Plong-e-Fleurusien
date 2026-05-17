@@ -489,6 +489,42 @@ export interface Database {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          subscription: Record<string, unknown>
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          subscription: Record<string, unknown>
+          created_at?: string
+        }
+        Update: {
+          subscription?: Record<string, unknown>
+        }
+        Relationships: []
+      }
+      gdpr_consent: {
+        Row: {
+          id: string
+          user_id: string
+          accepted_at: string
+          version: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          accepted_at?: string
+          version?: string
+        }
+        Update: {
+          version?: string
+        }
+        Relationships: []
+      }
       ca_members: {
         Row: {
           id: string

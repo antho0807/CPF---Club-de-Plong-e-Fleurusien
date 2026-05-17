@@ -1,4 +1,4 @@
-import { ExternalLink, BookOpen, Store, Shield, Phone, Globe, Clock } from 'lucide-react'
+import { ExternalLink, BookOpen, Store, Shield, Phone, Globe, Clock, MapPin } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'

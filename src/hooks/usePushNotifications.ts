@@ -41,7 +41,7 @@ export function usePushNotifications(userId: string | null) {
       })
       await supabase.from('push_subscriptions').upsert({
         user_id: userId,
-        subscription: sub.toJSON(),
+        subscription: sub.toJSON() as Record<string, unknown>,
       })
       setSubscribed(true)
     } catch (e) {
