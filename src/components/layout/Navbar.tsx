@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Users, Calendar, MapPin, FileText, Info, LogOut, User, Bell, ShieldCheck, Target,
+  LayoutDashboard, Users, Calendar, MapPin, FileText, Info, LogOut, User, Bell, ShieldCheck, Target, Lightbulb,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useNotifications } from '../../hooks/useNotifications'
@@ -14,6 +14,7 @@ const navItems = [
   { to: '/membres', label: 'Membres', icon: Users },
   { to: '/sites', label: 'Sites', icon: MapPin },
   { to: '/documents', label: 'Documents', icon: FileText },
+  { to: '/utile', label: 'Utile', icon: Lightbulb },
   { to: '/club', label: 'Le Club', icon: Info },
 ]
 

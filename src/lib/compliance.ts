@@ -108,11 +108,28 @@ export function getRegistrationBlock(
     }
   }
   if (EVENT_TYPES_REQUIRE_MEDICAL.includes(ev.event_type)) {
+    // P2★+ avec un CACI : le CACI n'est pas valable, certificat médecin obligatoire
+    if (requiresMedicalDoctor(memberBrevet) && compliance.documentType === 'caci') {
+      return {
+        type: 'medical_expired',
+        reason: 'Votre niveau P2★ ou supérieur requiert un certificat médical officiel délivré par un médecin. Le formulaire CACI auto-déclaratif n\'est valable qu\'en NB et P1★. Consultez un médecin avant de plonger.',
+      }
+    }
     if (compliance.medical === 'expired') {
-      return { type: 'medical_expired', reason: 'Votre certificat médical est expiré. Renouvelez-le avant de pouvoir plonger (règle LIFRAS).' }
+      return {
+        type: 'medical_expired',
+        reason: requiresMedicalDoctor(memberBrevet)
+          ? 'Votre certificat médical (médecin) est expiré. Renouvelez-le avant de pouvoir plonger (règle LIFRAS P2★+).'
+          : 'Votre auto-déclaration médicale (CACI) est expirée. Veuillez la renouveler avant de vous inscrire.',
+      }
     }
     if (compliance.medical === 'missing') {
-      return { type: 'medical_missing', reason: 'Aucun certificat médical enregistré. Téléversez votre attestation médicale ou formulaire CACI dans « Mes documents ».' }
+      return {
+        type: 'medical_missing',
+        reason: requiresMedicalDoctor(memberBrevet)
+          ? 'Aucun certificat médical officiel enregistré. À votre niveau (P2★+), une visite chez le médecin est obligatoire avant de plonger.'
+          : 'Aucun document médical enregistré. Téléversez votre formulaire CACI dans « Mes documents ».',
+      }
     }
   }
 

@@ -17,7 +17,8 @@ import { MemberForm } from '../components/members/MemberForm'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog'
 import { getMemberComplianceStatus, BREVET_LABELS } from '../lib/compliance'
 import { formatDate } from '../lib/utils'
-import { Edit2, LogOut, User, Mail, Phone, Calendar, Award, Lock, Loader2, CheckCircle } from 'lucide-react'
+import { Edit2, LogOut, User, Mail, Phone, Calendar, Award, Lock, Loader2, CheckCircle, Bell, BellOff } from 'lucide-react'
+import { usePushNotifications } from '../hooks/usePushNotifications'
 
 const pwSchema = z.object({
   newPassword: z.string().min(8, 'Minimum 8 caractères'),
@@ -71,6 +72,31 @@ function PasswordSection() {
             {isSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Mise à jour…</> : 'Changer le mot de passe'}
           </Button>
         </form>
+      </CardContent>
+    </Card>
+  )
+}
+
+function PushSection({ userId }: { userId: string }) {
+  const { supported, subscribed, loading, toggle } = usePushNotifications(userId)
+
+  if (!supported) return null
+
+  return (
+    <Card>
+      <CardContent className="p-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          {subscribed ? <Bell className="h-5 w-5 text-[#0077b6]" /> : <BellOff className="h-5 w-5 text-gray-400" />}
+          <div>
+            <p className="font-semibold text-sm text-gray-900">Notifications push</p>
+            <p className="text-xs text-gray-500">
+              {subscribed ? 'Activées — vous recevez les alertes du club' : 'Désactivées'}
+            </p>
+          </div>
+        </div>
+        <Button size="sm" variant={subscribed ? 'outline' : 'default'} onClick={toggle} disabled={loading} className="shrink-0">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : subscribed ? 'Désactiver' : 'Activer'}
+        </Button>
       </CardContent>
     </Card>
   )
@@ -153,6 +179,8 @@ export function Profile() {
       />
 
       <DocumentList documents={documents} onDelete={deleteDocument} />
+
+      <PushSection userId={profile.id} />
 
       <PasswordSection />
 

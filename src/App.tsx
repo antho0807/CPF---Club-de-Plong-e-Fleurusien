@@ -15,6 +15,8 @@ import { Documents } from './pages/Documents'
 import { ClubInfo } from './pages/ClubInfo'
 import { Profile } from './pages/Profile'
 import { Objectives } from './pages/Objectives'
+import { Useful } from './pages/Useful'
+import { GdprConsent } from './components/GdprConsent'
 import { PendingApproval } from './pages/PendingApproval'
 import { Rejected } from './pages/Rejected'
 import { AdminPending } from './pages/admin/AdminPending'
@@ -76,6 +78,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <GdprConsent />
       <Routes>
         {/* Public */}
         <Route path="/login"           element={<PublicRoute><Login /></PublicRoute>} />
@@ -100,6 +103,7 @@ export default function App() {
           <Route path="documents" element={<Documents />} />
           <Route path="club" element={<ClubInfo />} />
           <Route path="objectifs" element={<Objectives />} />
+          <Route path="utile" element={<Useful />} />
           <Route path="profil" element={<Profile />} />
         </Route>
 

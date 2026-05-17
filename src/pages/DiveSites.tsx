@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { MapPin, Plus, Waves, Eye, Edit2, Anchor } from 'lucide-react'
+import { MapPin, Plus, Waves, Eye, Edit2, Anchor, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { BREVET_LABELS } from '../lib/compliance'
@@ -137,6 +137,13 @@ function SiteCard({ site, onEdit }: { site: DiveSite; onEdit: (s: DiveSite) => v
               </div>
             )}
 
+            {site.booking_url && (
+              <a href={site.booking_url} target="_blank" rel="noopener noreferrer">
+                <Button className="w-full gap-2 bg-[#0077b6] hover:bg-[#005f8e]">
+                  <ExternalLink className="h-4 w-4" /> Réserver en ligne
+                </Button>
+              </a>
+            )}
             <Button variant="outline" className="w-full gap-2" onClick={() => { setShowDetails(false); onEdit(site) }}>
               <Edit2 className="h-4 w-4" /> Modifier ce site
             </Button>

@@ -81,6 +81,7 @@ export interface DiveSite {
   emergency_contacts: string | null
   min_brevet: BrevetLevel | null
   photos: string[] | null
+  booking_url: string | null
   created_by: string | null
   created_at: string
 }
