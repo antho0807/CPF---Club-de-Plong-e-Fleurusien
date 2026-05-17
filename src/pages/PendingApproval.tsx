@@ -1,17 +1,22 @@
-import { Anchor, Clock } from 'lucide-react'
+import { useEffect } from 'react'
+import { Clock, RefreshCw } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/ui/button'
 
 export function PendingApproval() {
-  const { profile, signOut } = useAuth()
+  const { profile, signOut, refreshProfile } = useAuth()
+
+  // Vérifie automatiquement le statut toutes les 30 secondes
+  useEffect(() => {
+    const interval = setInterval(() => refreshProfile(), 30_000)
+    return () => clearInterval(interval)
+  }, [refreshProfile])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0077b6] to-[#023e8a] px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4 shadow-lg">
-            <Anchor className="h-8 w-8 text-[#0077b6]" />
-          </div>
+          <img src="/logo-cpf.png" alt="CPF" className="w-24 h-24 object-contain mx-auto mb-3 drop-shadow-lg" />
           <h1 className="text-2xl font-bold text-white">CPF Plongée</h1>
           <p className="text-blue-200 text-sm mt-1">Club de Plongée Fleurusien · LIFRAS/CMAS</p>
         </div>
@@ -38,7 +43,10 @@ export function PendingApproval() {
             En attendant, vous pouvez contacter le club directement si votre demande est urgente.
           </div>
 
-          <Button variant="outline" onClick={signOut} className="w-full">
+          <Button variant="outline" onClick={refreshProfile} className="w-full mb-3 gap-2">
+            <RefreshCw className="h-4 w-4" /> Vérifier mon statut
+          </Button>
+          <Button variant="ghost" onClick={signOut} className="w-full text-gray-400 hover:text-gray-600">
             Se déconnecter
           </Button>
         </div>

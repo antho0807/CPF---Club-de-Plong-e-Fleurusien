@@ -14,7 +14,7 @@ import { formatDate } from '../lib/utils'
 import { Edit2, LogOut, User, Mail, Phone, Calendar, Award } from 'lucide-react'
 
 export function Profile() {
-  const { profile, signOut, refreshProfile } = useAuth()
+  const { profile, signOut, refreshProfile, isAdmin } = useAuth()
   const { updateMember } = useMembers()
   const { documents, refetch, uploadDocument, deleteDocument } = useDocuments(profile?.id)
   const [showEdit, setShowEdit] = useState(false)
@@ -96,6 +96,7 @@ export function Profile() {
           <DialogHeader><DialogTitle>Modifier mon profil</DialogTitle></DialogHeader>
           <MemberForm
             initial={profile}
+            isAdmin={isAdmin}
             onSubmit={async (data) => {
               await updateMember(profile.id, data)
               await refreshProfile()

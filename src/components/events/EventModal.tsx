@@ -460,9 +460,7 @@ export function EventModal({ event, open, onClose }: Props) {
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Exercices recommandés — progression vers {
-                    profile.brevet_level
-                      ? BREVET_LABELS[Object.keys(BREVET_ORDER).find((k) => BREVET_ORDER[k as BrevetLevel] === memberBrevetOrder + 1) as BrevetLevel ?? profile.brevet_level]
-                      : 'votre prochain niveau'
+                    recommendedKey ? (BREVET_LABELS[recommendedKey] ?? recommendedKey) : 'votre prochain niveau'
                   }
                 </p>
                 {recommended.map((rec, i) => {

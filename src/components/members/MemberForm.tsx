@@ -28,9 +28,10 @@ interface Props {
   initial?: Partial<Profile>
   onSubmit: (data: Partial<Profile>) => Promise<void>
   onCancel: () => void
+  isAdmin?: boolean
 }
 
-export function MemberForm({ initial, onSubmit, onCancel }: Props) {
+export function MemberForm({ initial, onSubmit, onCancel, isAdmin = false }: Props) {
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -102,19 +103,21 @@ export function MemberForm({ initial, onSubmit, onCancel }: Props) {
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <Label>Rôle</Label>
-          <Select value={role} onValueChange={(v) => setValue('role', v as UserRole)}>
-            <SelectTrigger className="mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="membre">Membre</SelectItem>
-              <SelectItem value="moniteur">Moniteur</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {isAdmin && (
+          <div>
+            <Label>Rôle</Label>
+            <Select value={role} onValueChange={(v) => setValue('role', v as UserRole)}>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="membre">Membre</SelectItem>
+                <SelectItem value="moniteur">Moniteur</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <div>

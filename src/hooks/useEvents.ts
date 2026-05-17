@@ -208,14 +208,16 @@ export function useMemberProgress(memberId: string | null, eventId: string | nul
 
   const refetch = useCallback(async () => {
     if (!memberId || !eventId) return
+    const exerciseIds = (await supabase
+      .from('event_exercises').select('id').eq('event_id', eventId)
+    ).data?.map((e) => e.id) ?? []
+    // .in() avec tableau vide fait planter PostgREST — on court-circuite
+    if (exerciseIds.length === 0) { setProgress([]); return }
     const { data } = await supabase
       .from('member_exercise_progress')
       .select('*')
       .eq('member_id', memberId)
-      .in(
-        'exercise_id',
-        (await supabase.from('event_exercises').select('id').eq('event_id', eventId)).data?.map((e) => e.id) ?? [],
-      )
+      .in('exercise_id', exerciseIds)
     setProgress((data ?? []) as MemberExerciseProgress[])
   }, [memberId, eventId])
 
