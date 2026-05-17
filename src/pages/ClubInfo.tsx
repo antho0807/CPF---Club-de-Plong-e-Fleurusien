@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { ExternalLink, Plus, Edit2, Trash2, Loader2 } from 'lucide-react'
+import { ExternalLink, Plus, Edit2, Trash2, Loader2, ShoppingBag } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -111,10 +112,44 @@ export function ClubInfo() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Le Club</h1>
         <p className="text-sm text-gray-500 mt-0.5">CPF — Club de Plongée Fleurusien</p>
+      </div>
+
+      <Tabs defaultValue="club">
+        <TabsList className="mb-4">
+          <TabsTrigger value="club">Le Club</TabsTrigger>
+          <TabsTrigger value="boutique" className="gap-2">
+            <ShoppingBag className="h-4 w-4" /> Boutique
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="boutique">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+              <ShoppingBag className="h-10 w-10 text-[#0077b6]" />
+            </div>
+            <span className="inline-block bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full mb-4">
+              Prochainement
+            </span>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Boutique du club</h2>
+            <p className="text-gray-500 text-sm max-w-sm">
+              Notre boutique en ligne arrive bientôt !<br />
+              Équipements, vêtements et accessoires aux couleurs du CPF.
+            </p>
+            <p className="text-xs text-gray-400 mt-4">
+              Pour toute commande en attendant, contactez-nous à{' '}
+              <a href="mailto:boutique@cpfleurusien.be" className="text-[#0077b6] hover:underline">
+                boutique@cpfleurusien.be
+              </a>
+            </p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="club">
+          <div className="space-y-8">
       </div>
 
       {/* Identity Card */}
@@ -285,6 +320,9 @@ export function ClubInfo() {
           )}
         </DialogContent>
       </Dialog>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

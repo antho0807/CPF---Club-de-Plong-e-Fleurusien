@@ -1,9 +1,15 @@
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { useAuth } from '../hooks/useAuth'
 import { useMembers } from '../hooks/useMembers'
 import { useDocuments } from '../hooks/useDocuments'
+import { supabase } from '../lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
 import { ComplianceBadge } from '../components/members/ComplianceBadge'
 import { DocumentUpload } from '../components/documents/DocumentUpload'
 import { DocumentList } from '../components/documents/DocumentList'
@@ -11,7 +17,64 @@ import { MemberForm } from '../components/members/MemberForm'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog'
 import { getMemberComplianceStatus, BREVET_LABELS } from '../lib/compliance'
 import { formatDate } from '../lib/utils'
-import { Edit2, LogOut, User, Mail, Phone, Calendar, Award } from 'lucide-react'
+import { Edit2, LogOut, User, Mail, Phone, Calendar, Award, Lock, Loader2, CheckCircle } from 'lucide-react'
+
+const pwSchema = z.object({
+  newPassword: z.string().min(8, 'Minimum 8 caractères'),
+  confirmPassword: z.string(),
+}).refine((d) => d.newPassword === d.confirmPassword, {
+  message: 'Les mots de passe ne correspondent pas',
+  path: ['confirmPassword'],
+})
+type PwForm = z.infer<typeof pwSchema>
+
+function PasswordSection() {
+  const [success, setSuccess] = useState(false)
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PwForm>({
+    resolver: zodResolver(pwSchema),
+  })
+
+  async function onSubmit(data: PwForm) {
+    const { error } = await supabase.auth.updateUser({ password: data.newPassword })
+    if (!error) {
+      setSuccess(true)
+      reset()
+      setTimeout(() => setSuccess(false), 4000)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Lock className="h-4 w-4 text-gray-500" /> Sécurité
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {success && (
+          <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm mb-4">
+            <CheckCircle className="h-4 w-4" /> Mot de passe mis à jour avec succès.
+          </div>
+        )}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+          <div>
+            <Label>Nouveau mot de passe</Label>
+            <Input type="password" className="mt-1" placeholder="Minimum 8 caractères" {...register('newPassword')} />
+            {errors.newPassword && <p className="text-xs text-red-500 mt-1">{errors.newPassword.message}</p>}
+          </div>
+          <div>
+            <Label>Confirmer le nouveau mot de passe</Label>
+            <Input type="password" className="mt-1" placeholder="••••••••" {...register('confirmPassword')} />
+            {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword.message}</p>}
+          </div>
+          <Button type="submit" size="sm" disabled={isSubmitting} className="gap-2">
+            {isSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Mise à jour…</> : 'Changer le mot de passe'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
 
 export function Profile() {
   const { profile, signOut, refreshProfile, isAdmin } = useAuth()
@@ -90,6 +153,8 @@ export function Profile() {
       />
 
       <DocumentList documents={documents} onDelete={deleteDocument} />
+
+      <PasswordSection />
 
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
         <DialogContent className="max-w-2xl">
