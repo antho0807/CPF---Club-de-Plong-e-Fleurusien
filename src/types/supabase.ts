@@ -31,6 +31,7 @@ export interface Database {
             | 'instructeur'
             | null
           role: 'admin' | 'moniteur' | 'membre'
+          status: 'pending' | 'approved' | 'rejected'
           is_active: boolean
           notes: string | null
           created_at: string
@@ -53,6 +54,7 @@ export interface Database {
             | 'instructeur'
             | null
           role?: 'admin' | 'moniteur' | 'membre'
+          status?: 'pending' | 'approved' | 'rejected'
           is_active?: boolean
           notes?: string | null
           created_at?: string
@@ -75,6 +77,7 @@ export interface Database {
             | 'instructeur'
             | null
           role?: 'admin' | 'moniteur' | 'membre'
+          status?: 'pending' | 'approved' | 'rejected'
           is_active?: boolean
           notes?: string | null
         }
@@ -461,6 +464,29 @@ export interface Database {
           content: string
         }
         Update: Record<string, never>
+        Relationships: []
+      }
+      objectifs_progression: {
+        Row: {
+          id: string
+          user_id: string
+          niveau: string
+          exercice_id: string
+          completed: boolean
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          niveau: string
+          exercice_id: string
+          completed?: boolean
+          completed_at?: string | null
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+        }
         Relationships: []
       }
       ca_members: {

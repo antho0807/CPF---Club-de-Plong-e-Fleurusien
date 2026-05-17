@@ -126,7 +126,7 @@ export function useEvents() {
             })
           : 'date à confirmer'
 
-        const eventLocation = (event as Record<string, unknown> & { dive_sites?: { name?: string } })
+        const eventLocation = (event as unknown as { dive_sites?: { name?: string } })
           ?.dive_sites?.name
 
         // Envoi non-bloquant : l'inscription est confirmée même si l'email échoue

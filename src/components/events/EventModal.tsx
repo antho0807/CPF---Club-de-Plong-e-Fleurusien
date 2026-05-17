@@ -147,7 +147,7 @@ export function EventModal({ event, open, onClose }: Props) {
         await unregisterFromEvent(ev.id, memberId)
         setMessage('Désinscrit avec succès.')
       } else {
-        await registerToEvent(ev.id, memberId, profile.full_name)
+        await registerToEvent(ev.id, memberId, profile?.full_name)
         setMessage('Demande envoyée — en attente de validation par l\'organisateur.')
       }
     } catch {
