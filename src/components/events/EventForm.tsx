@@ -73,11 +73,11 @@ export function EventForm({ initial, createdBy, creatorRole = 'membre', creatorB
     setSubmitError(null)
     console.log('[EventForm] submit start', data)
     try {
-      await onSubmit({
+      const payload: Partial<Event> & { meeting_time?: string } = {
         title: data.title,
         event_type: data.event_type as EventType,
         date_start: new Date(data.date_start).toISOString(),
-        date_end: null,                     // plus utilisé
+        date_end: null,
         registration_deadline: data.registration_deadline ? new Date(data.registration_deadline).toISOString() : null,
         location_id: data.location_id || null,
         max_participants: data.max_participants ? parseInt(data.max_participants) : null,
@@ -87,10 +87,9 @@ export function EventForm({ initial, createdBy, creatorRole = 'membre', creatorB
         carpooling_info: data.carpooling_info || null,
         equipment_needed: data.equipment_needed || null,
         created_by: createdBy,
-        // meeting_time via cast any car colonne peut ne pas être dans les types
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ...((data.meeting_time ? { meeting_time: data.meeting_time } : {}) as any),
-      })
+      }
+      if (data.meeting_time) payload.meeting_time = data.meeting_time
+      await onSubmit(payload)
       console.log('[EventForm] submit success')
     } catch (e: unknown) {
       console.error('[EventForm] submit error:', e)
