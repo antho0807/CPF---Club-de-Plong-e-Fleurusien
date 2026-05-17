@@ -13,7 +13,8 @@ precacheAndRoute(self.__WB_MANIFEST)
 // ─── Push notifications ───────────────────────────────────────
 
 self.addEventListener('push', (event) => {
-  // Afficher une notification même si le payload est vide/invalide (debug)
+  console.log('[SW] push event reçu', event.data?.text())
+
   let title = 'CPF Plongée'
   let body  = 'Nouvelle notification'
   let url   = '/'
@@ -29,13 +30,16 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  console.log('[SW] showNotification:', title, body)
+
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
       icon:  '/logo-cpf.png',
       badge: '/logo-cpf.png',
       data:  { url },
-    })
+    }).then(() => console.log('[SW] notification affichée'))
+      .catch((e: unknown) => console.error('[SW] erreur showNotification:', e))
   )
 })
 
