@@ -13,24 +13,30 @@ precacheAndRoute(self.__WB_MANIFEST)
 // ─── Push notifications ───────────────────────────────────────
 
 self.addEventListener('push', (event) => {
-  if (!event.data) return
+  // Afficher une notification même si le payload est vide/invalide (debug)
+  let title = 'CPF Plongée'
+  let body  = 'Nouvelle notification'
+  let url   = '/'
 
-  let data: { title?: string; body?: string; url?: string; icon?: string } = {}
-  try {
-    data = event.data.json()
-  } catch {
-    data = { title: 'CPF Plongée', body: event.data.text() }
+  if (event.data) {
+    try {
+      const d = event.data.json()
+      title = d.title ?? title
+      body  = d.body  ?? body
+      url   = d.url   ?? url
+    } catch {
+      body = event.data.text() || body
+    }
   }
 
-  const title = data.title ?? 'CPF Plongée'
-  const options: NotificationOptions = {
-    body:  data.body ?? '',
-    icon:  data.icon ?? '/logo-cpf.png',
-    badge: '/logo-cpf.png',
-    data:  { url: data.url ?? '/' },
-  }
-
-  event.waitUntil(self.registration.showNotification(title, options))
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon:  '/logo-cpf.png',
+      badge: '/logo-cpf.png',
+      data:  { url },
+    })
+  )
 })
 
 // ─── Clic sur la notification → ouvrir l'app ─────────────────
