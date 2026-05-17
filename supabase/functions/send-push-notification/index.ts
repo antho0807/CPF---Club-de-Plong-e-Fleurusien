@@ -1,83 +1,159 @@
 /**
- * Edge Function — Envoi de notifications push Web Push (VAPID)
- * Déploiement : supabase functions deploy send-push-notification
- *
- * Variables d'environnement requises :
- *   VAPID_PRIVATE_KEY = Rt8p1uSE8zZ1cyqfkJasuehojk6c3HMRRxI96cc2Y_Y
- *   VAPID_PUBLIC_KEY  = BEHap2OoCu8LvtCaFDLq8SEpOHa0OOWxvhggDKQiSHZS1dbflsGK5f8VZqQ2vpbBZqJAYB6rWZ5Gs3ogcTcPqFM
- *   VAPID_SUBJECT     = mailto:info@cpfleurusien.be
+ * Edge Function — Web Push RFC 8291 + VAPID
+ * Implémentation Deno native (Web Crypto API)
  */
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-interface Payload {
-  user_ids?: string[]   // si fourni, envoie uniquement à ces users
-  title: string
-  body: string
-  url?: string
+interface PushSub { endpoint: string; keys: { p256dh: string; auth: string } }
+interface Payload  { user_ids?: string[]; title: string; body: string; url?: string }
+
+// ─── Base64url ────────────────────────────────────────────────
+
+const enc = new TextEncoder()
+
+function dec(s: string): Uint8Array {
+  const b = s.replace(/-/g, '+').replace(/_/g, '/')
+  return Uint8Array.from(atob(b + '='.repeat((4 - b.length % 4) % 4)), c => c.charCodeAt(0))
 }
+
+function enc64(u: Uint8Array): string {
+  return btoa(String.fromCharCode(...u)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+}
+
+// ─── PKCS#8 pour P-256 (DER minimal, sans clé publique) ──────
+
+function pkcs8(raw: Uint8Array): ArrayBuffer {
+  // 30 41 02 01 00 30 13 06 07 2A 86 48 CE 3D 02 01 06 08 2A 86 48 CE 3D 03 01 07 04 27 30 25 02 01 01 04 20 [32]
+  const hdr = new Uint8Array([
+    0x30,0x41,0x02,0x01,0x00,0x30,0x13,0x06,0x07,
+    0x2a,0x86,0x48,0xce,0x3d,0x02,0x01,0x06,0x08,
+    0x2a,0x86,0x48,0xce,0x3d,0x03,0x01,0x07,0x04,
+    0x27,0x30,0x25,0x02,0x01,0x01,0x04,0x20,
+  ])
+  const out = new Uint8Array(67)
+  out.set(hdr); out.set(raw, 35)
+  return out.buffer
+}
+
+// ─── VAPID JWT ────────────────────────────────────────────────
+
+async function vapidJwt(endpoint: string, sub: string, pub: string, priv: string): Promise<string> {
+  // JWK : extraire x et y depuis la clé publique non-compressée (65 octets)
+  const pubBytes = dec(pub)
+  const x = enc64(pubBytes.slice(1, 33))
+  const y = enc64(pubBytes.slice(33, 65))
+
+  const key = await crypto.subtle.importKey(
+    'jwk',
+    { kty: 'EC', crv: 'P-256', d: priv, x, y, key_ops: ['sign'], ext: true },
+    { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign'],
+  )
+  const aud = new URL(endpoint).origin
+  const now = Math.floor(Date.now() / 1000)
+  const h = enc64(enc.encode(JSON.stringify({ typ: 'JWT', alg: 'ES256' })))
+  const p = enc64(enc.encode(JSON.stringify({ aud, exp: now + 43200, sub })))
+  const sig = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, enc.encode(`${h}.${p}`)))
+  return `${h}.${p}.${enc64(sig)}`
+}
+
+// ─── Chiffrement aes128gcm (RFC 8291 / RFC 8188) ─────────────
+
+async function hkdf(salt: Uint8Array, ikm: Uint8Array, info: Uint8Array, len: number): Promise<Uint8Array> {
+  const k = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits'])
+  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info }, k, len * 8))
+}
+
+function concat(...a: Uint8Array[]): Uint8Array {
+  const out = new Uint8Array(a.reduce((s, x) => s + x.length, 0))
+  let o = 0; for (const x of a) { out.set(x, o); o += x.length }
+  return out
+}
+
+async function encrypt(plaintext: string, s: PushSub): Promise<Uint8Array> {
+  const recvPubRaw = dec(s.keys.p256dh)
+  const recvPub = await crypto.subtle.importKey('raw', recvPubRaw, { name: 'ECDH', namedCurve: 'P-256' }, false, [])
+
+  const ephem = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits'])
+  const sendPubRaw = new Uint8Array(await crypto.subtle.exportKey('raw', ephem.publicKey))
+
+  const ecdhBits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: recvPub }, ephem.privateKey, 256))
+
+  const auth = dec(s.keys.auth)
+  const salt = crypto.getRandomValues(new Uint8Array(16))
+
+  // RFC 8291 key derivation
+  const info_wp = concat(enc.encode('WebPush: info\0'), recvPubRaw, sendPubRaw)
+  const prk = await hkdf(auth, ecdhBits, new Uint8Array(0), 32)
+  const ikm = await hkdf(new Uint8Array(0), prk, info_wp, 32)
+
+  const cek   = await hkdf(salt, ikm, enc.encode('Content-Encoding: aes128gcm\0'), 16)
+  const nonce = await hkdf(salt, ikm, enc.encode('Content-Encoding: nonce\0'), 12)
+
+  const aesKey = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['encrypt'])
+  const cipher = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: nonce },
+    aesKey,
+    concat(enc.encode(plaintext), new Uint8Array([0x02])),
+  ))
+
+  // RFC 8188 header: salt(16) + rs(4) + idlen(1) + senderPub
+  const rs = new Uint8Array(4); new DataView(rs.buffer).setUint32(0, 4096)
+  return concat(salt, rs, new Uint8Array([sendPubRaw.length]), sendPubRaw, cipher)
+}
+
+// ─── Handler ─────────────────────────────────────────────────
 
 serve(async (req) => {
   const { user_ids, title, body, url }: Payload = await req.json()
 
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  )
+  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-  // Récupérer les subscriptions
-  let query = supabase.from('push_subscriptions').select('subscription, user_id')
-  if (user_ids?.length) query = query.in('user_id', user_ids)
-  const { data: subs } = await query
+  let q = supabase.from('push_subscriptions').select('subscription, user_id')
+  if (user_ids?.length) q = q.in('user_id', user_ids)
+  const { data: subs, error } = await q
 
+  if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   if (!subs?.length) return new Response(JSON.stringify({ sent: 0 }), { status: 200 })
 
-  const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!
-  const VAPID_PUBLIC_KEY  = Deno.env.get('VAPID_PUBLIC_KEY')!
-  const VAPID_SUBJECT     = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:info@cpfleurusien.be'
+  const PRIV = Deno.env.get('VAPID_PRIVATE_KEY')!
+  const PUB  = Deno.env.get('VAPID_PUBLIC_KEY')!
+  const SUB  = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:noreply@app-cpf.be'
 
-  const notification = JSON.stringify({ title, body, url: url ?? '/' })
-  let sent = 0
+  const payload = JSON.stringify({ title, body, url: url ?? '/', icon: '/logo-cpf.png' })
 
-  for (const { subscription } of subs) {
+  let sent = 0; const errors: string[] = []
+
+  for (const row of subs) {
+    const s = row.subscription as PushSub
     try {
-      const sub = subscription as { endpoint: string; keys: { p256dh: string; auth: string } }
-      // Utilise l'API web-push via fetch avec VAPID
-      const res = await fetch(sub.endpoint, {
+      const jwt  = await vapidJwt(s.endpoint, SUB, PUB, PRIV)
+      const body = await encrypt(payload, s)
+
+      const res = await fetch(s.endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/octet-stream',
-          'TTL': '86400',
-          'Authorization': `vapid t=${await buildVapidToken(sub.endpoint, VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)},k=${VAPID_PUBLIC_KEY}`,
+          'Content-Type':     'application/octet-stream',
+          'Content-Encoding': 'aes128gcm',
+          'TTL':              '86400',
+          'Authorization':    `vapid t=${jwt},k=${PUB}`,
         },
-        body: new TextEncoder().encode(notification),
+        body,
       })
-      if (res.ok || res.status === 201) sent++
-    } catch {
-      // Subscription expirée ou invalide — on ignore
+
+      if (res.ok || res.status === 201) {
+        sent++
+      } else {
+        errors.push(`HTTP ${res.status}: ${await res.text().catch(() => '')}`)
+      }
+    } catch (e: unknown) {
+      errors.push(e instanceof Error ? `${e.name}: ${e.message}` : String(e))
     }
   }
 
-  return new Response(JSON.stringify({ sent }), { status: 200 })
-})
-
-// Génération simplifiée du token VAPID (JWT)
-async function buildVapidToken(endpoint: string, subject: string, publicKey: string, privateKey: string): Promise<string> {
-  const origin = new URL(endpoint).origin
-  const now = Math.floor(Date.now() / 1000)
-  const header = btoa(JSON.stringify({ typ: 'JWT', alg: 'ES256' })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
-  const payload = btoa(JSON.stringify({ aud: origin, exp: now + 86400, sub: subject })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
-  const toSign = `${header}.${payload}`
-  // Import private key
-  const pk = await crypto.subtle.importKey(
-    'raw',
-    Uint8Array.from(atob(privateKey.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)),
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    false,
-    ['sign'],
+  return new Response(
+    JSON.stringify({ sent, total: subs.length, ...(errors.length && { errors }) }),
+    { status: 200, headers: { 'Content-Type': 'application/json' } },
   )
-  const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, pk, new TextEncoder().encode(toSign))
-  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
-  return `${toSign}.${sigB64}`
-}
+})
