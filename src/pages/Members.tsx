@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, UserPlus, Download, Filter, ChevronRight } from 'lucide-react'
+import { AvatarDisplay } from '../components/members/AvatarDisplay'
 import { useMembers } from '../hooks/useMembers'
 import { useDocuments } from '../hooks/useDocuments'
 import { getMemberComplianceStatus, BREVET_LABELS } from '../lib/compliance'
@@ -23,6 +24,7 @@ function MemberRow({ member }: { member: Profile }) {
   return (
     <Link to={`/membres/${member.id}`}>
       <div className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 cursor-pointer">
+        <AvatarDisplay avatarUrl={member.avatar_url} name={member.full_name} size="md" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-semibold text-sm text-gray-900">{member.full_name}</p>

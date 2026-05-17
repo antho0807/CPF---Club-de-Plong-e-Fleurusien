@@ -47,7 +47,25 @@ export interface Profile {
   role: UserRole
   status: AccountStatus
   alias: string | null
+  avatar_url: string | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
+  emergency_contact_relation: string | null
   is_active: boolean
+  notes: string | null
+  created_at: string
+}
+
+export interface DiveHistory {
+  id: string
+  user_id: string
+  event_id: string | null
+  dive_date: string
+  site_name: string | null
+  event_type: string | null
+  max_depth: number | null
+  role: string | null
+  status: string | null
   notes: string | null
   created_at: string
 }

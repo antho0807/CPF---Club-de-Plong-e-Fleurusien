@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit2, UserX, Phone, Mail, Calendar, FileText, Award } from 'lucide-react'
+import { ArrowLeft, Edit2, UserX, Phone, Mail, Calendar, FileText, Award, AlertCircle, Waves } from 'lucide-react'
+import { AvatarDisplay } from '../components/members/AvatarDisplay'
 import { useMember, useMembers } from '../hooks/useMembers'
 import { useDocuments } from '../hooks/useDocuments'
 import { useAuth } from '../hooks/useAuth'
@@ -15,6 +17,63 @@ import { MemberForm } from '../components/members/MemberForm'
 import { DocumentList } from '../components/documents/DocumentList'
 import { DocumentUpload } from '../components/documents/DocumentUpload'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+
+function DiveHistoryTab({ memberId }: { memberId: string }) {
+  const [dives, setDives] = useState<Array<{
+    id: string; dive_date: string; site_name: string | null
+    event_type: string | null; status: string | null; title: string
+  }>>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase
+      .from('event_registrations')
+      .select('id, status, events(id, title, date_start, event_type, dive_sites(name))')
+      .eq('member_id', memberId)
+      .eq('status', 'confirmed')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        const now = new Date()
+        const past = (data ?? [])
+          .filter((r) => {
+            const ev = r.events as Record<string, unknown> | null
+            return ev && new Date(ev.date_start as string) < now
+          })
+          .map((r) => {
+            const ev = r.events as Record<string, unknown>
+            const site = (ev.dive_sites as Record<string, unknown> | null)?.name as string | null
+            return {
+              id: r.id,
+              dive_date: (ev.date_start as string).slice(0, 10),
+              site_name: site ?? null,
+              event_type: ev.event_type as string,
+              status: r.status,
+              title: ev.title as string,
+            }
+          })
+        setDives(past)
+        setLoading(false)
+      })
+  }, [memberId])
+
+  if (loading) return <div className="text-center py-8 text-gray-400">Chargement…</div>
+  if (!dives.length) return <p className="text-sm text-gray-400 text-center py-8">Aucune plongée enregistrée.</p>
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-gray-400 mb-3">{dives.length} plongée(s) confirmée(s)</p>
+      {dives.map((d) => (
+        <div key={d.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-white text-sm">
+          <div>
+            <p className="font-medium text-gray-900">{d.title}</p>
+            {d.site_name && <p className="text-xs text-gray-400">{d.site_name}</p>}
+          </div>
+          <p className="text-xs text-gray-500 flex-shrink-0">{new Date(d.dive_date).toLocaleDateString('fr-BE')}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export function MemberProfile() {
   const { id } = useParams<{ id: string }>()
@@ -85,9 +144,7 @@ export function MemberProfile() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-start gap-4 flex-wrap">
-            <div className="w-14 h-14 rounded-full bg-[#0077b6] flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
-              {member.full_name.charAt(0).toUpperCase()}
-            </div>
+            <AvatarDisplay avatarUrl={member.avatar_url} name={member.full_name} size="lg" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-bold text-gray-900">{member.full_name}</h1>
@@ -139,11 +196,46 @@ export function MemberProfile() {
         </CardContent>
       </Card>
 
+      {/* Contact d'urgence — visible uniquement par l'intéressé, admins et moniteurs */}
+      {(isOwnProfile || isAdmin || currentUser?.role === 'moniteur') && (
+        member.emergency_contact_name || member.emergency_contact_phone ? (
+          <Card className="border-orange-100">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-orange-500" /> Contact d'urgence
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-gray-600 space-y-1">
+              {member.emergency_contact_name && (
+                <p><strong>{member.emergency_contact_name}</strong>{member.emergency_contact_relation ? ` (${member.emergency_contact_relation})` : ''}</p>
+              )}
+              {member.emergency_contact_phone && (
+                <a href={`tel:${member.emergency_contact_phone}`} className="flex items-center gap-2 text-[#0077b6] hover:underline">
+                  <Phone className="h-4 w-4" />{member.emergency_contact_phone}
+                </a>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          isOwnProfile && (
+            <Card className="border-dashed border-orange-200 bg-orange-50/30">
+              <CardContent className="p-4 text-sm text-orange-700 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                Aucun contact d'urgence renseigné. Ajoutez-en un dans "Modifier le profil".
+              </CardContent>
+            </Card>
+          )
+        )
+      )}
+
       {/* Tabs */}
       <Tabs defaultValue="documents">
         <TabsList>
           <TabsTrigger value="documents" className="gap-2">
             <FileText className="h-4 w-4" /> Documents
+          </TabsTrigger>
+          <TabsTrigger value="plongees" className="gap-2">
+            <Waves className="h-4 w-4" /> Plongées
           </TabsTrigger>
         </TabsList>
 
@@ -160,6 +252,10 @@ export function MemberProfile() {
             documents={documents}
             onDelete={canEdit ? deleteDocument : undefined}
           />
+        </TabsContent>
+
+        <TabsContent value="plongees" className="mt-4">
+          <DiveHistoryTab memberId={member.id} />
         </TabsContent>
       </Tabs>
 

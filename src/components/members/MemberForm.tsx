@@ -19,6 +19,9 @@ const schema = z.object({
   lifras_number: z.string().optional(),
   brevet_level: z.string().optional(),
   alias: z.string().optional(),
+  emergency_contact_name: z.string().optional(),
+  emergency_contact_phone: z.string().optional(),
+  emergency_contact_relation: z.string().optional(),
   role: z.enum(['admin', 'moniteur', 'membre']),
   notes: z.string().optional(),
 })
@@ -43,6 +46,9 @@ export function MemberForm({ initial, onSubmit, onCancel, isAdmin = false }: Pro
       lifras_number: initial?.lifras_number ?? '',
       brevet_level: initial?.brevet_level ?? '',
       alias: initial?.alias ?? '',
+      emergency_contact_name: initial?.emergency_contact_name ?? '',
+      emergency_contact_phone: initial?.emergency_contact_phone ?? '',
+      emergency_contact_relation: initial?.emergency_contact_relation ?? '',
       role: initial?.role ?? 'membre',
       notes: initial?.notes ?? '',
     },
@@ -60,6 +66,9 @@ export function MemberForm({ initial, onSubmit, onCancel, isAdmin = false }: Pro
       lifras_number: data.lifras_number || null,
       brevet_level: (data.brevet_level as BrevetLevel) || null,
       alias: data.alias || null,
+      emergency_contact_name: data.emergency_contact_name || null,
+      emergency_contact_phone: data.emergency_contact_phone || null,
+      emergency_contact_relation: data.emergency_contact_relation || null,
       role: data.role as UserRole,
       notes: data.notes || null,
     })
@@ -94,6 +103,27 @@ export function MemberForm({ initial, onSubmit, onCancel, isAdmin = false }: Pro
           <Label>Alias / Pseudo <span className="text-gray-400 text-xs">(optionnel — affiché dans le chat des événements)</span></Label>
           <Input className="mt-1" placeholder="ex: DiveMaster06" {...register('alias')} />
         </div>
+      </div>
+
+      <div className="border-t pt-4">
+        <p className="text-sm font-semibold text-gray-700 mb-3">🚨 Contact d'urgence</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <Label>Nom</Label>
+            <Input className="mt-1" placeholder="Marie Dupont" {...register('emergency_contact_name')} />
+          </div>
+          <div>
+            <Label>Téléphone</Label>
+            <Input className="mt-1" placeholder="+32 XXX XX XX XX" {...register('emergency_contact_phone')} />
+          </div>
+          <div>
+            <Label>Lien</Label>
+            <Input className="mt-1" placeholder="Conjoint(e), parent…" {...register('emergency_contact_relation')} />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Label>Brevet</Label>
           <Select value={brevet} onValueChange={(v) => setValue('brevet_level', v)}>

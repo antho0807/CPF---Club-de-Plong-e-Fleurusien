@@ -17,8 +17,9 @@ import { MemberForm } from '../components/members/MemberForm'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog'
 import { getMemberComplianceStatus, BREVET_LABELS } from '../lib/compliance'
 import { formatDate } from '../lib/utils'
-import { Edit2, LogOut, User, Mail, Phone, Calendar, Award, Lock, Loader2, CheckCircle, Bell, BellOff } from 'lucide-react'
+import { Edit2, LogOut, User, Mail, Phone, Calendar, Award, Lock, Loader2, CheckCircle, Bell, BellOff, AlertCircle } from 'lucide-react'
 import { usePushNotifications } from '../hooks/usePushNotifications'
+import { AvatarUpload } from '../components/members/AvatarUpload'
 
 const pwSchema = z.object({
   newPassword: z.string().min(8, 'Minimum 8 caractères'),
@@ -129,9 +130,12 @@ export function Profile() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full bg-[#0077b6] flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-              {profile.full_name.charAt(0).toUpperCase()}
-            </div>
+            <AvatarUpload
+              userId={profile.id}
+              name={profile.full_name}
+              currentUrl={profile.avatar_url}
+              onUploaded={() => refreshProfile()}
+            />
             <div className="flex-1 space-y-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl font-bold text-gray-900">{profile.full_name}</h2>
@@ -179,6 +183,25 @@ export function Profile() {
       />
 
       <DocumentList documents={documents} onDelete={deleteDocument} />
+
+      {/* Contacts d'urgence */}
+      {(profile.emergency_contact_name || profile.emergency_contact_phone) && (
+        <Card className="border-orange-100">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-orange-500" /> Contact d'urgence
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-gray-600 space-y-1">
+            {profile.emergency_contact_name && <p><strong>{profile.emergency_contact_name}</strong>{profile.emergency_contact_relation ? ` (${profile.emergency_contact_relation})` : ''}</p>}
+            {profile.emergency_contact_phone && (
+              <a href={`tel:${profile.emergency_contact_phone}`} className="flex items-center gap-2 text-[#0077b6] hover:underline">
+                <Phone className="h-4 w-4" />{profile.emergency_contact_phone}
+              </a>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <PushSection userId={profile.id} />
 

@@ -142,17 +142,32 @@ export function EventForm({ initial, createdBy, creatorRole = 'membre', creatorB
         </div>
 
         <div>
-          <Label>Début *</Label>
-          <Input type="datetime-local" className="mt-1" {...register('date_start', { required: true })} />
-        </div>
-
-        <div>
           <Label>🕐 Heure du RDV sur place <span className="text-gray-400 text-xs">(optionnel)</span></Label>
           <Input type="time" className="mt-1" {...register('meeting_time')} />
         </div>
 
+        <div>
+          <Label>⚓ Heure de mise à l'eau *</Label>
+          <Input type="datetime-local" className="mt-1" {...register('date_start', { required: true })} />
+        </div>
+
         <div className="sm:col-span-2">
-          <Label>Deadline d'inscription</Label>
+          <div className="flex items-center justify-between mb-1">
+            <Label>Deadline d'inscription</Label>
+            <button
+              type="button"
+              className="text-xs text-[#0077b6] hover:underline"
+              onClick={() => {
+                const start = (document.querySelector('input[type="datetime-local"]') as HTMLInputElement)?.value
+                if (start) {
+                  const date = start.slice(0, 10)
+                  setValue('registration_deadline', `${date}T23:59`)
+                }
+              }}
+            >
+              Défaut 23h59
+            </button>
+          </div>
           <Input type="datetime-local" className="mt-1" {...register('registration_deadline')} />
           <p className="text-xs text-gray-400 mt-1">Après cette date, les inscriptions seront fermées automatiquement.</p>
         </div>
