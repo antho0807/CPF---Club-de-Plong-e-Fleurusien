@@ -30,8 +30,10 @@ export function Layout() {
 
       <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
 
-      {/* Sidebar desktop */}
-      <Navbar />
+      {/* Sidebar desktop — cachée sur mobile, visible sur md+ */}
+      <div className="hidden md:flex shrink-0">
+        <Navbar />
+      </div>
 
       {/* Overlay mobile nav */}
       {mobileNavOpen && (

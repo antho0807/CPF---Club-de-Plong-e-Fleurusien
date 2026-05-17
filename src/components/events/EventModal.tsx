@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   MapPin, Users, Calendar, Info, AlertTriangle, CheckCircle,
   ShieldAlert, Award, Send, Plus, Trash2, Clock,
@@ -9,6 +9,7 @@ import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Input } from '../ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { useCompliance } from '../../hooks/useCompliance'
 import { useEvents, useEventExercises, useMemberProgress, useEventMessages } from '../../hooks/useEvents'
@@ -98,6 +99,15 @@ export function EventModal({ event, open, onClose }: Props) {
   const [chatText, setChatText] = useState('')
   const [newExTitle, setNewExTitle] = useState('')
   const [newExBrevet, setNewExBrevet] = useState<BrevetLevel | ''>('')
+  const [showUnregisterConfirm, setShowUnregisterConfirm] = useState(false)
+  const [creator, setCreator] = useState<{ full_name: string; alias: string | null } | null>(null)
+
+  // Charger le profil du créateur
+  useEffect(() => {
+    if (!event?.created_by) return
+    supabase.from('profiles').select('full_name, alias').eq('id', event.created_by).single()
+      .then(({ data }) => data && setCreator(data as { full_name: string; alias: string | null }))
+  }, [event?.created_by])
 
   if (!event || !profile) return null
 
@@ -156,6 +166,18 @@ export function EventModal({ event, open, onClose }: Props) {
     setLoading(false)
   }
 
+  async function confirmUnregister() {
+    setShowUnregisterConfirm(false)
+    setLoading(true)
+    try {
+      await unregisterFromEvent(ev.id, memberId)
+      setMessage('Désinscrit avec succès.')
+    } catch {
+      setMessage('Une erreur est survenue. Réessayez.')
+    }
+    setLoading(false)
+  }
+
   async function handleValidate(regMemberId: string, accept: boolean) {
     await validateRegistration(ev.id, regMemberId, accept)
   }
@@ -174,6 +196,7 @@ export function EventModal({ event, open, onClose }: Props) {
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -214,6 +237,13 @@ export function EventModal({ event, open, onClose }: Props) {
 
           {/* ── Onglet Détails ── */}
           <TabsContent value="details" className="space-y-3 pt-3">
+            {creator && (
+              <p className="text-xs text-gray-400 flex items-center gap-1">
+                <Info className="h-3 w-3" />
+                Créé par <strong>{creator.alias ?? creator.full_name}</strong>
+                {' · '}{formatDate(ev.created_at, 'dd/MM/yyyy')}
+              </p>
+            )}
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Calendar className="h-4 w-4 text-gray-400" />
               {formatDateTime(ev.date_start)}
@@ -349,7 +379,12 @@ export function EventModal({ event, open, onClose }: Props) {
                   </Button>
                 )}
                 {isRegistered && (
-                  <Button variant="outline" onClick={handleRegister} disabled={loading} className="flex-1">
+                  <Button
+                    variant="outline"
+                    className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                    disabled={loading}
+                    onClick={() => myStatus === 'refused' ? handleRegister() : setShowUnregisterConfirm(true)}
+                  >
                     {loading ? 'Traitement…' : myStatus === 'refused' ? 'Retirer ma candidature' : 'Se désinscrire'}
                   </Button>
                 )}
@@ -654,5 +689,24 @@ export function EventModal({ event, open, onClose }: Props) {
         </Tabs>
       </DialogContent>
     </Dialog>
+
+    {/* ── Dialog confirmation désinscription ── */}
+    <Dialog open={showUnregisterConfirm} onOpenChange={setShowUnregisterConfirm}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Se désinscrire ?</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-gray-600">
+          Êtes-vous sûr de vouloir vous désinscrire de <strong>{ev.title}</strong> ?
+        </p>
+        <div className="flex gap-3 justify-end mt-2">
+          <Button variant="outline" onClick={() => setShowUnregisterConfirm(false)}>Annuler</Button>
+          <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmUnregister}>
+            Confirmer
+          </Button>
+        </div>
+      </DialogContent>
+      </Dialog>
+    </>
   )
 }
