@@ -94,7 +94,10 @@ function CalendarToolbar({ label, onNavigate, onView, view }: ToolbarProps) {
 export function Calendar() {
   const { events, loading, createEvent } = useEvents()
   const { canCreateEvents, profile } = useAuth()
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
+
+  // Toujours utiliser l'événement en direct depuis le tableau pour avoir les inscriptions à jour
+  const selectedEvent = selectedEventId ? (events.find(e => e.id === selectedEventId) ?? null) : null
   const [showForm, setShowForm] = useState(false)
   const [calView, setCalView] = useState<View>('month')
 
@@ -177,7 +180,7 @@ export function Calendar() {
             onView={setCalView}
             views={['month', 'week', 'agenda']}
             eventPropGetter={eventPropGetter}
-            onSelectEvent={(rbc) => setSelectedEvent(rbc.resource as Event)}
+            onSelectEvent={(rbc) => setSelectedEventId((rbc.resource as Event).id)}
             style={{ height: calView === 'agenda' ? undefined : 600 }}
             components={{ toolbar: CalendarToolbar }}
             popup
@@ -188,7 +191,7 @@ export function Calendar() {
       <EventModal
         event={selectedEvent}
         open={!!selectedEvent}
-        onClose={() => setSelectedEvent(null)}
+        onClose={() => setSelectedEventId(null)}
       />
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
