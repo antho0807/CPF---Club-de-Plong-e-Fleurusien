@@ -17,14 +17,16 @@ const navItems = [
   { to: '/club',       label: 'Le Club',          icon: Info },
 ]
 
-export function Navbar() {
+interface NavbarProps { onClose?: () => void }
+
+export function Navbar({ onClose }: NavbarProps = {}) {
   const { profile, signOut, isAdmin } = useAuth()
   const { notifications, unreadCount, markAllRead } = useNotifications(profile?.id)
   const [showNotifs, setShowNotifs] = useState(false)
   const location = useLocation()
 
   return (
-    <aside className="hidden md:flex flex-col w-64 min-h-screen bg-[#0077b6] text-white">
+    <aside className="flex flex-col w-64 min-h-[100dvh] bg-[#0077b6] text-white">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-white/20">
         <div className="bg-white rounded-full p-1 flex-shrink-0">
@@ -44,6 +46,7 @@ export function Navbar() {
             <Link
               key={to}
               to={to}
+              onClick={onClose}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 active ? 'bg-white text-[#0077b6]' : 'text-blue-100 hover:bg-white/10',

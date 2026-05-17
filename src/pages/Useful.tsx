@@ -38,14 +38,17 @@ const SHOPS = [
   },
 ]
 
-// ─── Règles de palanquée LIFRAS ─────────────────────────────────────────────
+// ─── Tableau associations palanquée LIFRAS MIL 2025 ─────────────────────────
 
-const PALANQUEE_RULES = [
-  { niveau: 'NB (Non-breveté)', profMax: '6 m', autonomie: 'Aucune — encadré', encadrant: 'P2★ minimum (ratio 1:1)', color: 'bg-gray-100 text-gray-700' },
-  { niveau: 'P1★', profMax: '20 m', autonomie: 'Aucune — encadré', encadrant: 'P2★ minimum (ratio 1:2 max)', color: 'bg-blue-100 text-blue-700' },
-  { niveau: 'P2★', profMax: '40 m', autonomie: 'Jusqu\'à 20 m en binôme P2', encadrant: 'P3★ ou GP pour > 20 m', color: 'bg-teal-100 text-teal-700' },
-  { niveau: 'P3★', profMax: '60 m', autonomie: 'Jusqu\'à 40 m autonome', encadrant: 'Peut encadrer P1★ (max 20 m)', color: 'bg-green-100 text-green-700' },
-  { niveau: 'P4★ / Guide de Palanquée', profMax: '60 m', autonomie: 'Toutes profondeurs (≤ 60 m)', encadrant: 'Peut diriger toutes palanquées', color: 'bg-purple-100 text-purple-700' },
+// Lignes = plongeur, Colonnes = DP/responsable
+const COLS = ['NB', 'P1★', 'P2★', 'P3★', 'P3★PPA', 'P4★/AM']
+const ASSO_TABLE = [
+  { plongeur: 'NB',      vals: ['N.A.', 'N.A.', 'N.A.',  'N.A.',  'N.A.', '15 m*'] },
+  { plongeur: 'P1★',     vals: ['N.A.', 'N.A.', 'N.A.',  '20 m',  '20 m', '20 m'] },
+  { plongeur: 'P2★',     vals: ['N.A.', 'N.A.', '20 m',  '30 m',  '40 m', '40 m'] },
+  { plongeur: 'P3★',     vals: ['N.A.', '20 m', '30 m',  '40 m',  '40 m', '40 m'] },
+  { plongeur: 'P3★PPA',  vals: ['N.A.', '20 m', '40 m',  '40 m',  '> 40 m', '> 40 m'] },
+  { plongeur: 'P4★/AM',  vals: ['15 m*','20 m', '40 m',  '40 m',  '> 40 m', 'N.A.'] },
 ]
 
 const DP_RULES = [
@@ -63,34 +66,47 @@ function RulesTab() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-[#0077b6]" />
-            Profondeurs et encadrement par niveau LIFRAS/CMAS
+            Tableau des associations de palanquée — LIFRAS MIL 2025
           </CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-gray-500 text-xs uppercase tracking-wide">
-                <th className="pb-2 pr-4">Niveau</th>
-                <th className="pb-2 pr-4">Prof. max</th>
-                <th className="pb-2 pr-4">Autonomie</th>
-                <th className="pb-2">Encadrement requis</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {PALANQUEE_RULES.map((r) => (
-                <tr key={r.niveau} className="py-2">
-                  <td className="py-2.5 pr-4">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${r.color}`}>
-                      {r.niveau}
-                    </span>
-                  </td>
-                  <td className="py-2.5 pr-4 font-semibold text-gray-900">{r.profMax}</td>
-                  <td className="py-2.5 pr-4 text-gray-600">{r.autonomie}</td>
-                  <td className="py-2.5 text-gray-600">{r.encadrant}</td>
+        <CardContent>
+          <p className="text-xs text-gray-500 mb-3">Lignes = plongeur · Colonnes = Directeur de Palanquée (DP) · Valeur = profondeur max autorisée</p>
+          <div className="overflow-x-auto">
+            <table className="text-xs whitespace-nowrap">
+              <thead>
+                <tr className="border-b">
+                  <th className="pb-2 pr-3 text-left text-gray-500 font-semibold">Plongeur ↓ / DP →</th>
+                  {COLS.map((c) => (
+                    <th key={c} className="pb-2 px-2 text-center text-gray-700 font-semibold">{c}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {ASSO_TABLE.map((row) => (
+                  <tr key={row.plongeur}>
+                    <td className="py-2 pr-3 font-semibold text-gray-800">{row.plongeur}</td>
+                    {row.vals.map((v, i) => (
+                      <td key={i} className={`py-2 px-2 text-center font-medium ${
+                        v === 'N.A.' ? 'text-red-400' :
+                        v.startsWith('>') ? 'text-purple-600' :
+                        v.includes('*') ? 'text-orange-600' :
+                        'text-green-700'
+                      }`}>{v}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-4 space-y-1 text-xs text-gray-500">
+            <p><span className="text-red-400 font-semibold">N.A.</span> = Non autorisé</p>
+            <p><span className="text-orange-600 font-semibold">15 m*</span> = Contact physique permanent, max 4 plongeurs, courbe sans palier</p>
+            <p><span className="text-purple-600 font-semibold">&gt; 40 m</span> = Spécialité PPA obligatoire</p>
+            <p>La profondeur max est toujours celle du plongeur le moins expérimenté.</p>
+          </div>
+          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+            ⚠️ Source : Manuel d'Instruction LIFRAS 2025. Vérifiez toujours avec votre moniteur.
+          </div>
         </CardContent>
       </Card>
 

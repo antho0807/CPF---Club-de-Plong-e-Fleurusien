@@ -96,9 +96,7 @@ export function Calendar() {
   const { canCreateEvents, profile } = useAuth()
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [calView, setCalView] = useState<View>(() =>
-    typeof window !== 'undefined' && window.innerWidth < 640 ? 'agenda' : 'month'
-  )
+  const [calView, setCalView] = useState<View>('month')
 
   const calendarEvents: RBCEvent[] = useMemo(
     () =>

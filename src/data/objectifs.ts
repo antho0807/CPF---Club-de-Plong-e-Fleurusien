@@ -2,6 +2,7 @@ export interface Exercice {
   id: string
   label: string
   detail?: string
+  requiresValidation?: boolean
 }
 
 export interface Categorie {
@@ -11,199 +12,193 @@ export interface Categorie {
 }
 
 export interface NiveauObjectifs {
-  niveau: string
+  niveau: string          // brevet actuel du membre
+  niveauCible: string     // brevet visé
   label: string
   description: string
   categories: Categorie[]
 }
 
-// Référentiel LIFRAS/CMAS Belgique
-// Chaque niveau affiche les objectifs pour OBTENIR le niveau SUIVANT
+// Référentiel LIFRAS/CMAS
+// Chaque entrée = exercices que le membre doit réaliser pour PASSER AU NIVEAU SUIVANT
 export const OBJECTIFS: NiveauObjectifs[] = [
+  // ─── NB → P1★ ───────────────────────────────────────────────
   {
-    niveau: '1_etoile',
-    label: 'Objectifs pour obtenir 2★ (P2)',
-    description: 'Exercices à valider pour passer du niveau 1★ au niveau 2★ LIFRAS/CMAS.',
+    niveau: 'non_brevet',
+    niveauCible: '1_etoile',
+    label: 'Objectifs pour obtenir P1★',
+    description: 'Exercices à valider pour passer du niveau Non-Breveté au brevet P1★ LIFRAS/CMAS.',
     categories: [
-      {
-        id: 'equipement',
-        label: 'Maîtrise de l\'équipement',
-        exercices: [
-          { id: 'capelage_decapelage',   label: 'Capelage et décapelage complet (surface)', detail: 'Mise en place et retrait de l\'équipement en surface' },
-          { id: 'capelage_eau',          label: 'Capelage / décapelage en eau peu profonde', detail: 'À 1-2 m de profondeur' },
-          { id: 'rinçage_entretien',     label: 'Rinçage et entretien du matériel après plongée' },
-          { id: 'lestage',              label: 'Calcul et ajustement du lestage personnel' },
-        ],
-      },
       {
         id: 'piscine',
-        label: 'Exercices piscine',
+        label: 'Exercices en piscine (EAR)',
         exercices: [
-          { id: 'palmage_ventral',       label: 'Palmage ventral (200 m sans interruption)' },
-          { id: 'palmage_dorsal',        label: 'Palmage dorsal (50 m)' },
-          { id: 'apnee_surface',         label: 'Tour du bassin en apnée (25 m minimum)' },
-          { id: 'vidage_masque_5m',      label: 'Vidage de masque à 5 m de profondeur', detail: 'Technique complète, maîtrise de la respiration' },
-          { id: 'lacher_reprise',        label: 'Lâcher et reprise d\'embout à 5 m' },
-          { id: 'remontee_sans_embout',  label: 'Remontée sans embout depuis 5 m', detail: 'Expiration continue et contrôlée' },
-          { id: 'equilibrage_gilet',     label: 'Équilibrage au gilet (flottabilité neutre à 5 m)', detail: 'Position horizontale stable sans effort' },
-          { id: 'statique_5m',          label: 'Station immobile à 5 m pendant 1 minute' },
-          { id: 'partage_air',          label: 'Partage d\'air avec embout de secours (octopus)', detail: 'Simulation de panne d\'air — donner et recevoir' },
+          { id: 'aisance_aquatique',   label: 'Aisance aquatique de base en piscine', detail: 'Nager sans équipement, se sentir à l\'aise dans l\'eau' },
+          { id: 'materiel',           label: 'Prise en main du matériel', detail: 'Détendeur, masque, palmes, stab (gilet), lestage' },
+          { id: 'respiration_det',    label: 'Respiration avec détendeur et tuba', detail: 'Alterner tuba et détendeur, maintenir un rythme régulier' },
+          { id: 'vidage_masque',      label: 'Vidage de masque complet en surface et sous l\'eau' },
+          { id: 'egalisation',        label: 'Égalisation des oreilles en descente', detail: 'Manœuvre de Valsalva ou Frenzel' },
+          { id: 'canard',             label: 'Canard : entrée dans l\'eau et immersion' },
+          { id: 'regles_securite',    label: 'Règles de sécurité et signalétique sous-marine', detail: 'Signaux OK, problème, remontée, stop, niveaux de gaz' },
         ],
       },
       {
-        id: 'securite',
-        label: 'Procédures de sécurité',
+        id: 'eau_libre',
+        label: 'Plongées en milieu naturel',
         exercices: [
-          { id: 'remontee_controlee',   label: 'Remontée lente et contrôlée (≤ 10 m/min)', detail: 'Contrôle de la vitesse de remontée' },
-          { id: 'palier_securite',      label: 'Exécution du palier de sécurité à 5 m (3 min)' },
-          { id: 'signaux_plongee',      label: 'Maîtrise des signaux de plongée (OK, problème, remonter…)' },
-          { id: 'procedure_urgence',    label: 'Procédures d\'urgence en surface (signal, position)' },
-        ],
-      },
-      {
-        id: 'mer',
-        label: 'Exercices en mer / eau libre',
-        exercices: [
-          { id: 'mise_eau_echelle',     label: 'Mise à l\'eau depuis une échelle / plongeon' },
-          { id: 'serre_file',           label: 'Rôle de serre-file lors d\'une plongée encadrée', detail: 'Suivre la palanquée, surveiller les membres' },
-          { id: 'retour_bateau',        label: 'Retour au bateau / au bord en autonomie' },
-          { id: 'navigation_basique',   label: 'Orientation basique sous l\'eau (cap, repères visuels)' },
-        ],
-      },
-      {
-        id: 'plongees',
-        label: 'Plongées validées (minimum)',
-        exercices: [
-          { id: 'p20_plongees',         label: '20 plongées minimum inscrites dans le carnet LIFRAS' },
-          { id: 'p10_naturel',          label: 'Dont 10 plongées en milieu naturel (mer, lac, carrière)' },
-          { id: 'p_prof_20m',           label: 'Au moins 2 plongées validées jusqu\'à 20 m de profondeur' },
+          { id: 'plongees_encadrees', label: '5 plongées en milieu naturel encadrées', detail: 'Palanquée encadrée par un moniteur ou P3★ minimum', requiresValidation: true },
         ],
       },
     ],
   },
+
+  // ─── P1★ → P2★ ──────────────────────────────────────────────
   {
-    niveau: '2_etoiles',
-    label: 'Objectifs pour obtenir 3★ (P3)',
-    description: 'Exercices à valider pour passer du niveau 2★ au niveau 3★ LIFRAS/CMAS.',
+    niveau: '1_etoile',
+    niveauCible: '2_etoiles',
+    label: 'Objectifs pour obtenir P2★',
+    description: 'Exercices à valider pour passer du brevet P1★ au brevet P2★ LIFRAS/CMAS.',
     categories: [
       {
+        id: 'ear',
+        label: 'Exercices en piscine (EAR)',
+        exercices: [
+          { id: 'nage_200m',          label: 'Nager 200 m sans équipement', detail: 'Style libre ou dos, sans interruption' },
+          { id: 'flottaison_10min',   label: 'Se maintenir en surface 10 min sans déplacement', detail: 'Gilet, palmage sur place' },
+          { id: 'saut_apnee',         label: 'Saut avant droit + apnée dynamique 18 m minimum', detail: 'Depuis le bord de la piscine, palmage en apnée' },
+          { id: 'apnee_statique',     label: 'Apnée statique en surface', detail: 'Durée minimale : 45 secondes' },
+          { id: 'canard_vidage',      label: 'Canard + vidage de masque complet en profondeur' },
+          { id: 'combinaison_bloc',   label: 'Mise en place de l\'équipement complet avec bloc', detail: 'Capelage/décapelage, stabilisation flottabilité' },
+        ],
+      },
+      {
+        id: 'eao',
+        label: 'Exercices en eau libre (EAO)',
+        exercices: [
+          { id: 'palmage_tuba',       label: 'Palmage au tuba en équipement complet', detail: 'Rythme régulier, position horizontale' },
+          { id: 'serre_file_1',       label: 'Rôle de serre-file : aider le chef de palanquée avant/pendant/après la plongée', requiresValidation: true },
+          { id: 'serre_file_2',       label: 'Rôle de serre-file : veiller que la palanquée reste groupée', requiresValidation: true },
+          { id: 'serre_file_3',       label: 'Rôle de serre-file : se mettre à l\'eau en dernier, sortir en premier', requiresValidation: true },
+          { id: 'serre_file_4',       label: 'Rôle de serre-file : reprendre le rôle de DP si chef séparé', requiresValidation: true },
+          { id: 'serre_file_5',       label: 'Rôle de serre-file : utiliser le parachute pendant le palier', requiresValidation: true },
+        ],
+      },
+      {
         id: 'dp',
-        label: 'Direction de palanquée (DP)',
+        label: '3 Directions de palanquée (DP)',
         exercices: [
-          { id: 'dp_1',                 label: 'DP validée n°1 (moins de 10 m)', detail: 'Briefing, conduite de 2 plongeurs, débriefing' },
-          { id: 'dp_2',                 label: 'DP validée n°2 (10 à 20 m)', detail: 'Gestion de la profondeur, respect des limites' },
-          { id: 'dp_3',                 label: 'DP validée n°3 (10 à 20 m)', detail: 'Minimum 3 DP validées par un moniteur' },
-          { id: 'briefing_dp',          label: 'Réalisation d\'un briefing complet avant immersion', detail: 'Profil de plongée, signaux, procédures urgence' },
-          { id: 'debriefing_dp',        label: 'Réalisation d\'un débriefing après plongée' },
+          { id: 'dp1',               label: 'DP1 : plongée normale (briefing, conduite, débriefing)', requiresValidation: true },
+          { id: 'dp2',               label: 'DP2 : orientation au compas, parcours ≥ 50 m sans repère visible', requiresValidation: true },
+          { id: 'dp3',               label: 'DP3 : parachute obligatoire au palier de sécurité', requiresValidation: true },
         ],
       },
       {
-        id: 'serre_file',
-        label: 'Rôle de serre-file avancé',
+        id: 'sauvetage',
+        label: 'Techniques de sauvetage',
         exercices: [
-          { id: 'sf_avance_1',          label: 'Serre-file lors d\'une DP avec 3 plongeurs ou plus' },
-          { id: 'sf_avance_2',          label: 'Gestion d\'un incident mineur en tant que serre-file', detail: 'Perte d\'un plongeur, gestion du niveau de gaz' },
-        ],
-      },
-      {
-        id: 'navigation',
-        label: 'Navigation sous-marine',
-        exercices: [
-          { id: 'nav_aller_retour',     label: 'Navigation au compas aller-retour (50 m)', detail: 'Retour au point de départ sans visibilité' },
-          { id: 'nav_triangulaire',     label: 'Navigation triangulaire au compas' },
-          { id: 'retour_bateau',        label: 'Retour autonome au bateau / à la bouée' },
-        ],
-      },
-      {
-        id: 'incidents',
-        label: 'Gestion des incidents',
-        exercices: [
-          { id: 'panne_air_fond',       label: 'Simulation de panne d\'air au fond (partage octopus)', detail: 'Donner et recevoir l\'embout de secours à 15-20 m' },
-          { id: 'panne_air_remontee',   label: 'Remontée en binôme sur une seule source d\'air' },
-          { id: 'remorquage_surface',   label: 'Remorquage d\'un plongeur en difficulté en surface (50 m)' },
-          { id: 'plongeur_inconscient', label: 'Mise en sécurité d\'un plongeur inconscient en surface', detail: 'Position, signal, appel des secours' },
-        ],
-      },
-      {
-        id: 'plongees',
-        label: 'Plongées validées (minimum)',
-        exercices: [
-          { id: 'p50_plongees',         label: '50 plongées minimum dans le carnet LIFRAS' },
-          { id: 'p30_naturel',          label: 'Dont 30 plongées en milieu naturel' },
-          { id: 'p_prof_30m',           label: 'Au moins 2 plongées validées à 30 m ou plus' },
-          { id: 'p_prof_40m',           label: 'Au moins 1 plongée validée à 40 m (encadrée)' },
+          { id: 'remontee_assistee',  label: 'Remontée assistée en air depuis 20 m (partage d\'embout)', requiresValidation: true },
+          { id: 'remontee_tech',      label: 'Remontée technique plongeur en difficulté depuis 20 m', requiresValidation: true },
+          { id: 'remorquage',         label: 'Sauvetage + remorquage 50 m depuis 5 m de profondeur', requiresValidation: true },
+          { id: 'rcr',               label: 'RCR — Réanimation Cardio-Respiratoire (formation validée)', requiresValidation: true },
         ],
       },
     ],
   },
+
+  // ─── P2★ → P3★ ──────────────────────────────────────────────
+  {
+    niveau: '2_etoiles',
+    niveauCible: '3_etoiles',
+    label: 'Objectifs pour obtenir P3★',
+    description: 'Exercices à valider pour passer du brevet P2★ au brevet P3★ LIFRAS/CMAS.',
+    categories: [
+      {
+        id: 'prerequis',
+        label: 'Prérequis (carnet de plongée)',
+        exercices: [
+          { id: 'pre_60_plongees',    label: '60 plongées en eau libre minimum', requiresValidation: true },
+          { id: 'pre_nuit',          label: '5 plongées de nuit validées', requiresValidation: true },
+          { id: 'pre_mer',           label: '20 plongées en mer minimum', requiresValidation: true },
+          { id: 'pre_30h',           label: '30 heures de plongée cumulées', requiresValidation: true },
+          { id: 'pre_40p',           label: 'Depuis P2★ : 40 plongées dont 20 à min 30 m', requiresValidation: true },
+          { id: 'pre_profond',       label: 'Depuis P2★ : 10 plongées entre 35 et 40 m', requiresValidation: true },
+          { id: 'pre_age',           label: 'Âge minimum 18 ans', requiresValidation: true },
+          { id: 'pre_cfps',          label: 'CFPS (Certificat de Formation aux Premiers Secours) valide', requiresValidation: true },
+        ],
+      },
+      {
+        id: 'dp_eao',
+        label: '5 Directions de palanquée complètes (EAO)',
+        exercices: [
+          { id: 'dp_briefing',       label: 'DP avec briefing complet : orientation, déco, débriefing', requiresValidation: true },
+          { id: 'dp_parachute',      label: 'DP avec parachute obligatoire sur au moins une plongée', requiresValidation: true },
+          { id: 'dp_encadrement',    label: 'Encadrement d\'un plongeur P1★ (plongée ≤ 15 m)', requiresValidation: true },
+        ],
+      },
+      {
+        id: 'sauvetage',
+        label: 'Techniques de sauvetage avancées',
+        exercices: [
+          { id: 'remontee_ass_30',   label: 'Remontée assistée en air depuis 30 m', requiresValidation: true },
+          { id: 'remorquage_100',    label: 'Sauvetage + remorquage 100 m depuis 10 m de profondeur', requiresValidation: true },
+          { id: 'remontee_tech_30',  label: 'Remontée technique depuis 30 m (stabilisation obligatoire à 10 m, ±2 m de marge)', requiresValidation: true },
+          { id: 'rcr_jour',         label: 'RCR le jour même de l\'épreuve sauvetage', requiresValidation: true },
+        ],
+      },
+    ],
+  },
+
+  // ─── P3★ → P4★/GP ───────────────────────────────────────────
   {
     niveau: '3_etoiles',
-    label: 'Objectifs pour obtenir 4★ / Guide de Palanquée',
-    description: 'Exercices à valider pour passer du niveau 3★ au niveau 4★ (Guide de palanquée) LIFRAS/CMAS.',
+    niveauCible: '4_etoiles',
+    label: 'Objectifs pour obtenir P4★ / Guide de Palanquée',
+    description: 'Exercices à valider pour passer du brevet P3★ au niveau P4★ (Guide de Palanquée) LIFRAS/CMAS.',
     categories: [
       {
         id: 'planification',
-        label: 'Planification de plongées autonomes',
+        label: 'Planification et organisation',
         exercices: [
-          { id: 'plan_profil',          label: 'Planification d\'un profil de plongée complet', detail: 'Tables LIFRAS / ordinateur, paliers obligatoires, intervalles' },
-          { id: 'plan_logistique',      label: 'Organisation logistique d\'une sortie club', detail: 'Transport, matériel, liste membres, contacts urgence' },
-          { id: 'plan_meteo',           label: 'Analyse météo et conditions avant une sortie', detail: 'Vent, courant, visibilité, marées' },
-          { id: 'plan_securite',        label: 'Rédaction d\'un plan de sécurité de plongée', detail: 'Procédures urgence, centre hyperbare, moyens de secours' },
+          { id: 'plan_profil',       label: 'Planification d\'un profil de plongée complet', detail: 'Tables LIFRAS, paliers, intervalles, décompression' },
+          { id: 'plan_logistique',   label: 'Organisation logistique d\'une sortie club', detail: 'Transport, matériel, membres, contacts d\'urgence' },
+          { id: 'plan_securite',     label: 'Rédaction d\'un plan de sécurité de plongée', detail: 'Procédures urgence, centre hyperbare, moyens secours' },
         ],
       },
       {
-        id: 'gestion_palanquee',
-        label: 'Gestion complète d\'une palanquée',
+        id: 'dp_avancee',
+        label: 'Direction de palanquée avancée',
         exercices: [
-          { id: 'dp_4_plongeurs',       label: 'DP validée avec 4 plongeurs ou plus' },
-          { id: 'dp_profonde',          label: 'DP validée à 40 m ou plus (profondeur maximale P3)', detail: 'Gestion de la narcose, paliers, remontée groupe' },
-          { id: 'dp_nuit',             label: 'DP validée en conditions de faible visibilité ou nuit' },
-          { id: 'gestion_groupe',       label: 'Gestion d\'un groupe hétérogène (niveaux mixtes)' },
+          { id: 'dp_groupe',         label: 'DP avec 4 plongeurs ou plus', requiresValidation: true },
+          { id: 'dp_profonde',       label: 'DP à 40 m ou plus (gestion narcose, paliers, remontée groupe)', requiresValidation: true },
+          { id: 'dp_nuit',          label: 'DP en conditions de faible visibilité ou nuit', requiresValidation: true },
+          { id: 'gestion_groupe',    label: 'Gestion d\'un groupe hétérogène (niveaux mixtes)', requiresValidation: true },
         ],
       },
       {
         id: 'sauvetage',
         label: 'Sauvetage et assistance',
         exercices: [
-          { id: 'sauvetage_complet',    label: 'Sauvetage complet : détection → remontée → surface', detail: 'Simulation complète d\'un accident de plongée' },
-          { id: 'rcp_surface',         label: 'RCP en surface sur un plongeur sorti de l\'eau' },
-          { id: 'oxygene_therapeutique', label: 'Administration d\'oxygène thérapeutique', detail: 'Formation obligatoire (bouteille O2, masque) ' },
-          { id: 'dea',                 label: 'Utilisation d\'un DEA (défibrillateur)', detail: 'Formation BLS + DEA à jour' },
-          { id: 'evacuation',          label: 'Coordination d\'une évacuation et contact centre hyperbare' },
-        ],
-      },
-      {
-        id: 'theorie',
-        label: 'Théorie avancée',
-        exercices: [
-          { id: 'physique_plongee',     label: 'Physique de la plongée : pression, gaz, lois', detail: 'Loi de Boyle-Mariotte, Dalton, Henry' },
-          { id: 'physiologie',          label: 'Physiologie : effets de la pression, narcose, ADD', detail: 'Accident de décompression, barotraumatismes' },
-          { id: 'tables_plongee',       label: 'Maîtrise des tables de plongée LIFRAS', detail: 'Calcul de plongées consécutives, intervalles de surface' },
-          { id: 'nitrox',              label: 'Initiation Nitrox (recommandé)', detail: 'Mélange enrichi, MOD, équivalent d\'air' },
-        ],
-      },
-      {
-        id: 'plongees',
-        label: 'Plongées validées (minimum)',
-        exercices: [
-          { id: 'p100_plongees',        label: '100 plongées minimum dans le carnet LIFRAS' },
-          { id: 'p50_mer',             label: 'Dont 50 plongées en mer ou milieu naturel' },
-          { id: 'p_prof_60m',          label: 'Au moins 1 plongée validée à 60 m (encadrée instructeur)' },
-          { id: 'p_2_nuits',           label: '2 plongées de nuit validées' },
+          { id: 'sauvetage_complet', label: 'Sauvetage complet : détection → remontée → surface', requiresValidation: true },
+          { id: 'o2_therapeutique',  label: 'Administration d\'oxygène thérapeutique (formation O₂)', requiresValidation: true },
+          { id: 'dea',              label: 'Utilisation d\'un DEA (défibrillateur) — BLS à jour', requiresValidation: true },
+          { id: 'evacuation',       label: 'Coordination d\'une évacuation + contact centre hyperbare', requiresValidation: true },
         ],
       },
     ],
   },
+
+  // ─── P4★ — Niveau max ────────────────────────────────────────
   {
     niveau: '4_etoiles',
-    label: 'Niveau maximum atteint',
-    description: 'Vous êtes Guide de Palanquée 4★ LIFRAS/CMAS. Continuez à progresser vers les formations de moniteur.',
+    niveauCible: '',
+    label: 'Niveau maximum',
+    description: 'Vous êtes Guide de Palanquée 4★ LIFRAS/CMAS.',
     categories: [],
   },
 ]
 
-export function getObjectifsForNiveau(niveau: string): NiveauObjectifs | undefined {
-  return OBJECTIFS.find((o) => o.niveau === niveau)
+export function getObjectifsForNiveau(brevet: string | null | undefined): NiveauObjectifs | undefined {
+  return OBJECTIFS.find((o) => o.niveau === (brevet ?? 'non_brevet'))
 }
 
 export function countTotal(objectifs: NiveauObjectifs): number {
