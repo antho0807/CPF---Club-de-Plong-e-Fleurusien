@@ -17,6 +17,18 @@
   box-sizing: border-box;
 }
 
+/* Touch-action sur tous les éléments interactifs (fix tap sur iOS dans les scrollables) */
+button,
+[role="button"],
+a,
+input,
+select,
+textarea,
+label {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -237,6 +249,41 @@ body {
 
 .rbc-current-time-indicator {
   background-color: #0077b6;
+}
+
+/* ─── Fix zoom iPhone Safari : 16px minimum sur tous les champs ─── */
+/* Safari zoome automatiquement quand font-size < 16px sur un input */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="url"] {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  textarea {
+    font-size: 16px !important;
+  }
+
+  select {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  button,
+  [role="button"] {
+    min-height: 44px;
+  }
 }
 
 /* ─── Mobile ─── */

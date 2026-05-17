@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { ComplianceWidget } from '../components/dashboard/ComplianceWidget'
 import { StatsCards } from '../components/dashboard/StatsCards'
 import { UpcomingEvents } from '../components/dashboard/UpcomingEvents'
+import { ExternalEvents } from '../components/dashboard/ExternalEvents'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 
@@ -95,6 +96,9 @@ export function Dashboard() {
 
       {/* Prochains événements */}
       <UpcomingEvents />
+
+      {/* Événements plongée externes (LIFRAS, partenaires) */}
+      <ExternalEvents />
     </div>
   )
 }

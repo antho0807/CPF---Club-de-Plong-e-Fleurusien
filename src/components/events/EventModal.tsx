@@ -195,7 +195,19 @@ export function EventModal({ event, open, onClose }: Props) {
   }
 
   async function handleValidate(regMemberId: string, accept: boolean) {
-    await validateRegistration(ev.id, regMemberId, accept)
+    try {
+      await validateRegistration(ev.id, regMemberId, accept)
+      // Mise à jour immédiate du statut dans l'état local
+      setLocalRegs((prev) =>
+        prev.map((r) =>
+          r.member_id === regMemberId
+            ? { ...r, status: accept ? 'confirmed' : 'refused' }
+            : r
+        )
+      )
+    } catch (e: unknown) {
+      setMessage('Erreur validation : ' + (e instanceof Error ? e.message : String(e)))
+    }
   }
 
   async function handleSendMessage() {
@@ -720,7 +732,7 @@ export function EventModal({ event, open, onClose }: Props) {
 
     {/* ── Dialog modification événement ── */}
     <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto z-[200]">
         <DialogHeader>
           <DialogTitle>Modifier l'événement</DialogTitle>
         </DialogHeader>
@@ -740,7 +752,7 @@ export function EventModal({ event, open, onClose }: Props) {
 
     {/* ── Dialog annulation événement ── */}
     <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm z-[200]">
         <DialogHeader>
           <DialogTitle className="text-red-600">Annuler l'événement ?</DialogTitle>
         </DialogHeader>
@@ -776,7 +788,7 @@ export function EventModal({ event, open, onClose }: Props) {
 
     {/* ── Dialog confirmation désinscription ── */}
     <Dialog open={showUnregisterConfirm} onOpenChange={setShowUnregisterConfirm}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm z-[200]">
         <DialogHeader>
           <DialogTitle>Se désinscrire ?</DialogTitle>
         </DialogHeader>
