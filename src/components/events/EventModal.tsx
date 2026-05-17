@@ -421,12 +421,15 @@ export function EventModal({ event, open, onClose }: Props) {
                     onChange={(e) => setNewExTitle(e.target.value)}
                     className="text-sm flex-1 min-w-0"
                   />
-                  <Select value={newExBrevet} onValueChange={(v) => setNewExBrevet(v as BrevetLevel | '')}>
+                  <Select
+                    value={newExBrevet === '' ? '_all' : newExBrevet}
+                    onValueChange={(v) => setNewExBrevet(v === '_all' ? '' : v as BrevetLevel)}
+                  >
                     <SelectTrigger className="w-36 text-xs shrink-0">
                       <SelectValue placeholder="Niveau min." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tous niveaux</SelectItem>
+                      <SelectItem value="_all">Tous niveaux</SelectItem>
                       {(Object.entries(BREVET_LABELS) as [BrevetLevel, string][]).map(([k, v]) => (
                         <SelectItem key={k} value={k}>{v}</SelectItem>
                       ))}

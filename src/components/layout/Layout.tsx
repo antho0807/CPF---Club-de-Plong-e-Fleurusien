@@ -9,7 +9,7 @@ export function Layout() {
       <div
         className="fixed inset-0 -z-10"
         style={{
-          backgroundImage: "url('/image.plongée.test.jpg')",
+          backgroundImage: "url('/bg-plongee.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
