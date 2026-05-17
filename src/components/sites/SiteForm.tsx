@@ -39,6 +39,7 @@ interface FormData {
   facilities: string
   emergency_contacts: string
   min_brevet: string
+  booking_url: string
 }
 
 interface Props {
@@ -67,6 +68,7 @@ export function SiteForm({ initial, createdBy, onSubmit, onCancel }: Props) {
       facilities: initial?.facilities ?? '',
       emergency_contacts: initial?.emergency_contacts ?? DEFAULT_EMERGENCY,
       min_brevet: initial?.min_brevet ?? '',
+      booking_url: initial?.booking_url ?? '',
     },
   })
 
@@ -91,6 +93,7 @@ export function SiteForm({ initial, createdBy, onSubmit, onCancel }: Props) {
       facilities: data.facilities || null,
       emergency_contacts: data.emergency_contacts || null,
       min_brevet: (data.min_brevet as BrevetLevel) || null,
+      booking_url: data.booking_url || null,
       created_by: createdBy,
     })
     setSubmitting(false)
@@ -176,6 +179,17 @@ export function SiteForm({ initial, createdBy, onSubmit, onCancel }: Props) {
       <div>
         <Label>Contacts d'urgence</Label>
         <Textarea className="mt-1" rows={4} {...register('emergency_contacts')} />
+      </div>
+
+      <div>
+        <Label>URL de réservation en ligne</Label>
+        <Input
+          type="url"
+          className="mt-1"
+          placeholder="https://..."
+          {...register('booking_url')}
+        />
+        <p className="text-xs text-gray-400 mt-1">Si renseignée, un bouton "Réserver en ligne" apparaîtra sur la fiche du site.</p>
       </div>
 
       <div className="flex gap-3 pt-2">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { MapPin, Plus, Waves, Eye, Edit2, Anchor, ExternalLink } from 'lucide-react'
+import { MapPin, Plus, Waves, Eye, Edit2, Anchor, ExternalLink, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { BREVET_LABELS } from '../lib/compliance'
@@ -15,7 +15,12 @@ const SITE_ICONS: Record<string, typeof Waves> = {
   mer: Waves, lac: Waves, carriere: Anchor, piscine: Anchor, fosse: Anchor,
 }
 
-function SiteCard({ site, onEdit }: { site: DiveSite; onEdit: (s: DiveSite) => void }) {
+function SiteCard({ site, onEdit, onDelete, isAdmin }: {
+  site: DiveSite
+  onEdit: (s: DiveSite) => void
+  onDelete: (id: string) => void
+  isAdmin: boolean
+}) {
   const [showDetails, setShowDetails] = useState(false)
   const Icon = SITE_ICONS[site.site_type] ?? MapPin
 
@@ -49,6 +54,21 @@ function SiteCard({ site, onEdit }: { site: DiveSite; onEdit: (s: DiveSite) => v
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowDetails(true)}>
                 <Eye className="h-4 w-4" />
               </Button>
+              {isAdmin && (
+                <>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setShowDetails(false); onEdit(site) }}>
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-red-500 hover:bg-red-50"
+                    onClick={() => onDelete(site.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </CardContent>
@@ -144,9 +164,11 @@ function SiteCard({ site, onEdit }: { site: DiveSite; onEdit: (s: DiveSite) => v
                 </Button>
               </a>
             )}
-            <Button variant="outline" className="w-full gap-2" onClick={() => { setShowDetails(false); onEdit(site) }}>
-              <Edit2 className="h-4 w-4" /> Modifier ce site
-            </Button>
+            {isAdmin && (
+              <Button variant="outline" className="w-full gap-2" onClick={() => { setShowDetails(false); onEdit(site) }}>
+                <Edit2 className="h-4 w-4" /> Modifier ce site
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -155,7 +177,7 @@ function SiteCard({ site, onEdit }: { site: DiveSite; onEdit: (s: DiveSite) => v
 }
 
 export function DiveSites() {
-  const { isMoniteur, profile } = useAuth()
+  const { isMoniteur, isAdmin, profile } = useAuth()
   const [sites, setSites] = useState<DiveSite[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -174,6 +196,12 @@ export function DiveSites() {
     await (supabase.from('dive_sites') as any).insert(data)
     await fetchSites()
     setShowForm(false)
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Supprimer ce site de plongée ? Cette action est irréversible.')) return
+    await supabase.from('dive_sites').delete().eq('id', id)
+    await fetchSites()
   }
 
   async function handleUpdate(data: Partial<DiveSite>) {
@@ -198,7 +226,7 @@ export function DiveSites() {
           <h1 className="text-2xl font-bold text-gray-900">Sites de plongée</h1>
           <p className="text-sm text-gray-500 mt-0.5">{sites.length} sites enregistrés</p>
         </div>
-        {isMoniteur && (
+        {isAdmin && (
           <Button onClick={() => setShowForm(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             Ajouter un site
@@ -221,7 +249,7 @@ export function DiveSites() {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {typeSites.map((s) => (
-                  <SiteCard key={s.id} site={s} onEdit={setEditSite} />
+                  <SiteCard key={s.id} site={s} onEdit={setEditSite} onDelete={handleDelete} isAdmin={isAdmin} />
                 ))}
               </div>
             </div>
