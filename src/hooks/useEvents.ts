@@ -264,7 +264,7 @@ export function useEventMessages(eventId: string | null) {
     if (!eventId) { setLoading(false); return }
     const { data } = await supabase
       .from('event_messages')
-      .select('*, profiles(id, full_name)')
+      .select('*, profiles(id, full_name, alias)')
       .eq('event_id', eventId)
       .order('created_at')
     setMessages((data ?? []) as unknown as EventMessage[])

@@ -46,6 +46,7 @@ export interface Profile {
   brevet_level: BrevetLevel | null
   role: UserRole
   status: AccountStatus
+  alias: string | null
   is_active: boolean
   notes: string | null
   created_at: string
@@ -159,7 +160,7 @@ export interface EventMessage {
   content: string
   created_at: string
   // Joined
-  profiles?: Pick<Profile, 'id' | 'full_name'>
+  profiles?: Pick<Profile, 'id' | 'full_name' | 'alias'>
 }
 
 export interface CAMember {

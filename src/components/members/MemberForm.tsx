@@ -18,6 +18,7 @@ const schema = z.object({
   date_naissance: z.string().optional(),
   lifras_number: z.string().optional(),
   brevet_level: z.string().optional(),
+  alias: z.string().optional(),
   role: z.enum(['admin', 'moniteur', 'membre']),
   notes: z.string().optional(),
 })
@@ -41,6 +42,7 @@ export function MemberForm({ initial, onSubmit, onCancel, isAdmin = false }: Pro
       date_naissance: initial?.date_naissance ?? '',
       lifras_number: initial?.lifras_number ?? '',
       brevet_level: initial?.brevet_level ?? '',
+      alias: initial?.alias ?? '',
       role: initial?.role ?? 'membre',
       notes: initial?.notes ?? '',
     },
@@ -57,6 +59,7 @@ export function MemberForm({ initial, onSubmit, onCancel, isAdmin = false }: Pro
       date_naissance: data.date_naissance || null,
       lifras_number: data.lifras_number || null,
       brevet_level: (data.brevet_level as BrevetLevel) || null,
+      alias: data.alias || null,
       role: data.role as UserRole,
       notes: data.notes || null,
     })
@@ -86,6 +89,10 @@ export function MemberForm({ initial, onSubmit, onCancel, isAdmin = false }: Pro
         <div>
           <Label>N° LIFRAS</Label>
           <Input className="mt-1" {...register('lifras_number')} />
+        </div>
+        <div>
+          <Label>Alias / Pseudo <span className="text-gray-400 text-xs">(optionnel — affiché dans le chat des événements)</span></Label>
+          <Input className="mt-1" placeholder="ex: DiveMaster06" {...register('alias')} />
         </div>
         <div>
           <Label>Brevet</Label>

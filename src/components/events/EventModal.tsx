@@ -352,6 +352,62 @@ export function EventModal({ event, open, onClose }: Props) {
               </div>
             )}
             {ev.is_cancelled && <Button variant="ghost" className="w-full" onClick={onClose}>Fermer</Button>}
+
+            {/* ── Plongeurs confirmés ── */}
+            {(() => {
+              const confirmed = registrations.filter((r) => r.status === 'confirmed')
+              if (confirmed.length === 0) return null
+              const total = ev.max_participants
+              return (
+                <div className="border-t pt-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-gray-700">🤿 Plongeurs confirmés</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        total && confirmed.length >= total
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {confirmed.length}{total ? `/${total}` : ''} places
+                        {total && confirmed.length >= total ? ' — Complet' : ` dispo`}
+                      </span>
+                    </div>
+                  </div>
+                  {isMoniteur ? (
+                    <div className="space-y-1.5">
+                      {confirmed.map((reg) => {
+                        const mp = reg.profiles as { full_name?: string; alias?: string; brevet_level?: string } | undefined
+                        const name = mp?.alias || mp?.full_name || 'Membre'
+                        const initials = name.slice(0, 2).toUpperCase()
+                        return (
+                          <div key={reg.id} className="flex items-center gap-2 text-sm">
+                            <div className="w-6 h-6 rounded-full bg-[#0077b6]/20 text-[#0077b6] text-xs flex items-center justify-center font-semibold flex-shrink-0">
+                              {initials}
+                            </div>
+                            <span className="flex-1 text-gray-800">{name}</span>
+                            {mp?.brevet_level && (
+                              <span className="text-xs text-gray-400">{BREVET_LABELS[mp.brevet_level as BrevetLevel] ?? mp.brevet_level}</span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {confirmed.map((reg) => {
+                        const mp = reg.profiles as { full_name?: string; alias?: string } | undefined
+                        const name = mp?.alias || (mp?.full_name?.split(' ')[0] ?? 'Membre')
+                        return (
+                          <span key={reg.id} className="text-xs bg-blue-50 text-[#0077b6] px-2 py-0.5 rounded-full">
+                            {name}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
           </TabsContent>
 
           {/* ── Onglet Inscriptions (organisateur) ── */}
@@ -550,16 +606,28 @@ export function EventModal({ event, open, onClose }: Props) {
                 )}
                 {messages.map((msg) => {
                   const isOwn = msg.sender_id === memberId
-                  const senderName = (msg.profiles as { full_name?: string } | undefined)?.full_name ?? 'Membre'
+                  const p = msg.profiles as { full_name?: string; alias?: string } | undefined
+                  const displayName = p?.alias || p?.full_name || 'Membre'
+                  const initials = displayName.slice(0, 2).toUpperCase()
                   return (
-                    <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[75%] rounded-xl px-3 py-2 text-sm ${isOwn ? 'bg-[#0077b6] text-white' : 'bg-gray-100 text-gray-900'}`}>
-                        {!isOwn && <p className="text-xs font-semibold mb-0.5 opacity-70">{senderName}</p>}
+                    <div key={msg.id} className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                      {!isOwn && (
+                        <div className="w-7 h-7 rounded-full bg-[#0077b6] text-white text-xs flex items-center justify-center flex-shrink-0 mt-auto">
+                          {initials}
+                        </div>
+                      )}
+                      <div className={`max-w-[72%] rounded-xl px-3 py-2 text-sm ${isOwn ? 'bg-[#0077b6] text-white' : 'bg-gray-100 text-gray-900'}`}>
+                        {!isOwn && <p className="text-xs font-semibold mb-0.5 text-[#0077b6]">{displayName}</p>}
                         <p>{msg.content}</p>
                         <p className={`text-xs mt-0.5 ${isOwn ? 'text-blue-200' : 'text-gray-400'}`}>
                           {formatDate(msg.created_at, 'dd/MM HH:mm')}
                         </p>
                       </div>
+                      {isOwn && (
+                        <div className="w-7 h-7 rounded-full bg-gray-300 text-gray-700 text-xs flex items-center justify-center flex-shrink-0 mt-auto">
+                          {(profile.alias || profile.full_name).slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
                     </div>
                   )
                 })}

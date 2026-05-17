@@ -32,6 +32,7 @@ export interface Database {
             | null
           role: 'admin' | 'moniteur' | 'membre'
           status: 'pending' | 'approved' | 'rejected'
+          alias: string | null
           is_active: boolean
           notes: string | null
           created_at: string
@@ -55,6 +56,7 @@ export interface Database {
             | null
           role?: 'admin' | 'moniteur' | 'membre'
           status?: 'pending' | 'approved' | 'rejected'
+          alias?: string | null
           is_active?: boolean
           notes?: string | null
           created_at?: string
@@ -78,6 +80,7 @@ export interface Database {
             | null
           role?: 'admin' | 'moniteur' | 'membre'
           status?: 'pending' | 'approved' | 'rejected'
+          alias?: string | null
           is_active?: boolean
           notes?: string | null
         }
