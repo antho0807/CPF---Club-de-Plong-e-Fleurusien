@@ -31,11 +31,12 @@ interface Props {
   createdBy: string
   creatorRole?: UserRole
   creatorBrevet?: BrevetLevel | null
+  prefillDate?: string   // datetime-local string pré-rempli depuis le clic calendrier
   onSubmit: (data: Partial<Event>) => Promise<void>
   onCancel: () => void
 }
 
-export function EventForm({ initial, createdBy, creatorRole = 'membre', creatorBrevet = null, onSubmit, onCancel }: Props) {
+export function EventForm({ initial, createdBy, creatorRole = 'membre', creatorBrevet = null, prefillDate = '', onSubmit, onCancel }: Props) {
   const [sites, setSites] = useState<DiveSite[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -50,7 +51,7 @@ export function EventForm({ initial, createdBy, creatorRole = 'membre', creatorB
     defaultValues: {
       title: initial?.title ?? '',
       event_type: initial?.event_type ?? (allowedTypes[0] ?? 'sortie_mer'),
-      date_start: initial?.date_start ? initial.date_start.slice(0, 16) : '',
+      date_start: initial?.date_start ? initial.date_start.slice(0, 16) : (prefillDate || ''),
       meeting_time: '',
       registration_deadline: initial?.registration_deadline ? initial.registration_deadline.slice(0, 16) : '',
       location_id: initial?.location_id ?? '',

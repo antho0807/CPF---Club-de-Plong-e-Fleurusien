@@ -100,6 +100,23 @@ export function Calendar() {
   const selectedEvent = selectedEventId ? (events.find(e => e.id === selectedEventId) ?? null) : null
   const [showForm, setShowForm] = useState(false)
   const [calView, setCalView] = useState<View>('month')
+  const [prefillDate, setPrefillDate] = useState<string>('')
+  const [noAccessMsg, setNoAccessMsg] = useState<string | null>(null)
+
+  // Clic sur un créneau vide du calendrier
+  function handleSelectSlot({ start }: { start: Date }) {
+    if (canCreateEvents) {
+      // Pré-remplir date + heure par défaut (09:00)
+      const y = start.getFullYear()
+      const m = String(start.getMonth() + 1).padStart(2, '0')
+      const d = String(start.getDate()).padStart(2, '0')
+      setPrefillDate(`${y}-${m}-${d}T09:00`)
+      setShowForm(true)
+    } else {
+      setNoAccessMsg('Réservé aux membres P3★ et plus')
+      setTimeout(() => setNoAccessMsg(null), 3000)
+    }
+  }
 
   const calendarEvents: RBCEvent[] = useMemo(
     () =>
@@ -181,6 +198,8 @@ export function Calendar() {
             views={['month', 'week', 'agenda']}
             eventPropGetter={eventPropGetter}
             onSelectEvent={(rbc) => setSelectedEventId((rbc.resource as Event).id)}
+            onSelectSlot={handleSelectSlot}
+            selectable
             style={{ height: calView === 'agenda' ? undefined : 600 }}
             components={{ toolbar: CalendarToolbar }}
             popup
@@ -194,7 +213,14 @@ export function Calendar() {
         onClose={() => setSelectedEventId(null)}
       />
 
-      <Dialog open={showForm} onOpenChange={setShowForm}>
+      {/* Message accès refusé */}
+      {noAccessMsg && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 text-white text-sm px-4 py-2 rounded-full shadow-lg">
+          {noAccessMsg}
+        </div>
+      )}
+
+      <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) setPrefillDate('') }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Créer un événement</DialogTitle>
@@ -203,11 +229,13 @@ export function Calendar() {
             createdBy={profile.id}
             creatorRole={profile.role}
             creatorBrevet={profile.brevet_level}
+            prefillDate={prefillDate}
             onSubmit={async (data) => {
               await createEvent(data)
               setShowForm(false)
+              setPrefillDate('')
             }}
-            onCancel={() => setShowForm(false)}
+            onCancel={() => { setShowForm(false); setPrefillDate('') }}
           />
         </DialogContent>
       </Dialog>
