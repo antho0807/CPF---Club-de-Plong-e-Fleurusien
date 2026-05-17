@@ -100,6 +100,22 @@ export function MemberForm({ initial, onSubmit, onCancel, isAdmin = false }: Pro
           <Input className="mt-1" {...register('lifras_number')} />
         </div>
         <div>
+          <Label>Brevet</Label>
+          <Select value={brevet} onValueChange={(v) => setValue('brevet_level', v)}>
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Sélectionner..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="non_brevet">Non breveté</SelectItem>
+              {(Object.entries(BREVET_LABELS) as [BrevetLevel, string][])
+                .filter(([k]) => k !== 'non_brevet')
+                .map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
           <Label>Alias / Pseudo <span className="text-gray-400 text-xs">(optionnel — affiché dans le chat des événements)</span></Label>
           <Input className="mt-1" placeholder="ex: DiveMaster06" {...register('alias')} />
         </div>
@@ -124,22 +140,6 @@ export function MemberForm({ initial, onSubmit, onCancel, isAdmin = false }: Pro
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <Label>Brevet</Label>
-          <Select value={brevet} onValueChange={(v) => setValue('brevet_level', v)}>
-            <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Sélectionner..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="non_brevet">Non breveté</SelectItem>
-              {(Object.entries(BREVET_LABELS) as [BrevetLevel, string][])
-                .filter(([k]) => k !== 'non_brevet')
-                .map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
         {isAdmin && (
           <div>
             <Label>Rôle</Label>
