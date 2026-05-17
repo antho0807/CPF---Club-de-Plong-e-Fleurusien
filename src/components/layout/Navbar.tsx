@@ -2,34 +2,26 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Calendar, MapPin, Info, LogOut, User, Bell,
-  ShieldCheck, Target, Lightbulb, ChevronDown, Users, FileText, Building2,
+  ShieldCheck, Target, Lightbulb,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useNotifications } from '../../hooks/useNotifications'
 import { cn } from '../../lib/utils'
 
-const mainItems = [
+const navItems = [
   { to: '/',           label: 'Tableau de bord', icon: LayoutDashboard },
   { to: '/calendrier', label: 'Calendrier',       icon: Calendar },
   { to: '/objectifs',  label: 'Objectifs',        icon: Target },
   { to: '/sites',      label: 'Sites',            icon: MapPin },
   { to: '/utile',      label: 'Utile',            icon: Lightbulb },
-]
-
-const clubSubItems = [
-  { to: '/membres',   label: 'Membres',         icon: Users },
-  { to: '/documents', label: 'Documents',        icon: FileText },
-  { to: '/club',      label: 'À propos du club', icon: Info },
+  { to: '/club',       label: 'Le Club',          icon: Info },
 ]
 
 export function Navbar() {
   const { profile, signOut, isAdmin } = useAuth()
   const { notifications, unreadCount, markAllRead } = useNotifications(profile?.id)
   const [showNotifs, setShowNotifs] = useState(false)
-  const [clubOpen, setClubOpen] = useState(false)
   const location = useLocation()
-
-  const isClubActive = clubSubItems.some((i) => location.pathname === i.to)
 
   return (
     <aside className="hidden md:flex flex-col w-64 min-h-screen bg-[#0077b6] text-white">
@@ -46,8 +38,8 @@ export function Navbar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {mainItems.map(({ to, label, icon: Icon }) => {
-          const active = location.pathname === to
+        {navItems.map(({ to, label, icon: Icon }) => {
+          const active = location.pathname === to || (to === '/club' && location.pathname.startsWith('/club'))
           return (
             <Link
               key={to}
@@ -62,42 +54,6 @@ export function Navbar() {
             </Link>
           )
         })}
-
-        {/* Le Club — menu dépliable */}
-        <div>
-          <button
-            onClick={() => setClubOpen((v) => !v)}
-            className={cn(
-              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-              isClubActive ? 'bg-white text-[#0077b6]' : 'text-blue-100 hover:bg-white/10',
-            )}
-          >
-            <Building2 className="h-5 w-5 flex-shrink-0" />
-            <span className="flex-1 text-left">Le Club</span>
-            <ChevronDown className={cn('h-4 w-4 transition-transform', (clubOpen || isClubActive) && 'rotate-180')} />
-          </button>
-
-          {(clubOpen || isClubActive) && (
-            <div className="ml-4 mt-1 space-y-0.5 border-l border-white/20 pl-3">
-              {clubSubItems.map(({ to, label, icon: Icon }) => {
-                const active = location.pathname === to
-                return (
-                  <Link
-                    key={to}
-                    to={to}
-                    className={cn(
-                      'flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm font-medium transition-colors',
-                      active ? 'bg-white/20 text-white' : 'text-blue-200 hover:bg-white/10 hover:text-white',
-                    )}
-                  >
-                    <Icon className="h-4 w-4 flex-shrink-0" />
-                    {label}
-                  </Link>
-                )
-              })}
-            </div>
-          )}
-        </div>
       </nav>
 
       {/* Admin */}

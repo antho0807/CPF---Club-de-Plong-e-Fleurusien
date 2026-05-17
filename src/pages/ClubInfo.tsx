@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { ExternalLink, Plus, Edit2, Trash2, Loader2, ShoppingBag } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { ExternalLink, Plus, Edit2, Trash2, Loader2, ShoppingBag, FileText, Anchor } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -10,6 +11,7 @@ import { Label } from '../components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog'
 import { Badge } from '../components/ui/badge'
+import { Members } from './Members'
 import type { CAMember } from '../types/database.types'
 
 const CA_ROLES = [
@@ -72,6 +74,8 @@ function CAForm({ initial, onSubmit, onCancel }: {
 
 export function ClubInfo() {
   const { isAdmin } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTab = searchParams.get('tab') ?? 'club'
   const [caMembers, setCaMembers] = useState<CAMember[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -118,11 +122,18 @@ export function ClubInfo() {
         <p className="text-sm text-gray-500 mt-0.5">CPF — Club de Plongée Fleurusien</p>
       </div>
 
-      <Tabs defaultValue="club">
-        <TabsList className="mb-4">
+      <Tabs value={activeTab} onValueChange={(v) => setSearchParams({ tab: v })}>
+        <TabsList className="flex-wrap h-auto gap-1 mb-4">
           <TabsTrigger value="club">Le Club</TabsTrigger>
-          <TabsTrigger value="boutique" className="gap-2">
-            <ShoppingBag className="h-4 w-4" /> Boutique
+          <TabsTrigger value="boutique" className="gap-1.5">
+            <ShoppingBag className="h-3.5 w-3.5" /> Boutique
+          </TabsTrigger>
+          <TabsTrigger value="membres">Membres</TabsTrigger>
+          <TabsTrigger value="documents" className="gap-1.5">
+            <FileText className="h-3.5 w-3.5" /> Documents
+          </TabsTrigger>
+          <TabsTrigger value="apropos" className="gap-1.5">
+            <Anchor className="h-3.5 w-3.5" /> À propos
           </TabsTrigger>
         </TabsList>
 
@@ -323,6 +334,85 @@ export function ClubInfo() {
 
           </div>
         </TabsContent>
+
+        {/* ── Onglet Membres ── */}
+        <TabsContent value="membres">
+          <Members />
+        </TabsContent>
+
+        {/* ── Onglet Documents ── */}
+        <TabsContent value="documents">
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Documents officiels du club</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Statuts, règlement intérieur et documents administratifs du CPF.</p>
+            </div>
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p className="font-medium text-gray-700 mb-1">Documents à venir</p>
+                <p className="text-sm">Les statuts, règlement intérieur et autres documents officiels du club seront disponibles ici.</p>
+                <p className="text-sm mt-3">
+                  Pour toute demande, contactez{' '}
+                  <a href="mailto:info@cpfleurusien.be" className="text-[#0077b6] hover:underline">
+                    info@cpfleurusien.be
+                  </a>
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* ── Onglet À propos ── */}
+        <TabsContent value="apropos">
+          <div className="space-y-6 max-w-2xl">
+            <div className="flex items-center gap-4">
+              <img src="/logo-cpf.png" alt="CPF" className="w-20 h-20 object-contain flex-shrink-0" />
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Club de Plongée Fleurusien</h2>
+                <p className="text-gray-500 text-sm">ASBL · Fondé en 1984 · Fleurus, Belgique</p>
+              </div>
+            </div>
+
+            <Card>
+              <CardHeader><CardTitle className="text-base">Notre histoire</CardTitle></CardHeader>
+              <CardContent className="text-sm text-gray-600 space-y-2">
+                <p>Le Club de Plongée Fleurusien (CPF) a été fondé en <strong>1984</strong> à Fleurus, en Belgique. Depuis plus de 40 ans, il rassemble des passionnés de plongée sous-marine de la région de Charleroi.</p>
+                <p>Club familial comptant une <strong>cinquantaine de membres</strong>, le CPF accueille aussi bien les débutants souhaitant découvrir la plongée que les plongeurs expérimentés désireux de progresser.</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className="text-base">Nos activités</CardTitle></CardHeader>
+              <CardContent className="text-sm text-gray-600 space-y-2">
+                <p>Les entraînements ont lieu <strong>chaque mardi de 20h00 à 21h30</strong> à la Piscine de Fleurus (Rue de Fleurjoux 50, 6220 Fleurus).</p>
+                <p>Le club organise régulièrement des <strong>sorties en carrières, lacs et en mer</strong>, ainsi que des formations aux brevets LIFRAS/CMAS.</p>
+                <p>Équipements de plongée disponibles pour les membres. Gonflage air et nitrox lors des sorties.</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className="text-base">Affiliations & certifications</CardTitle></CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline" className="text-sm">LIFRAS asbl · Club n°202</Badge>
+                  <Badge variant="outline" className="text-sm">CMAS Belgium</Badge>
+                  <Badge variant="outline" className="text-sm">ADEPS (Wallonie)</Badge>
+                </div>
+                <p className="text-sm text-gray-500 mt-3">
+                  La LIFRAS (Ligue Francophone de Recherches et Activités Sub-aquatiques) est la fédération belge de plongée affiliée à la CMAS (Confédération Mondiale des Activités Sub-aquatiques).
+                </p>
+              </CardContent>
+            </Card>
+
+            <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-900">
+              <p className="font-bold mb-1">🚨 Urgence hyperbare</p>
+              <p className="font-semibold">CHU de Liège — Service de médecine hyperbare</p>
+              <p>Tél : +32 4 366 71 11 · SECOURS : 112</p>
+            </div>
+          </div>
+        </TabsContent>
+
       </Tabs>
     </div>
   )
