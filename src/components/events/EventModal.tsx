@@ -763,7 +763,7 @@ export function EventModal({ event, open, onClose }: Props) {
           onChange={(e) => setCancelReason(e.target.value)}
           className="mt-2"
         />
-        {message && message.includes('erreur') && (
+        {message && (
           <p className="text-xs text-red-500 mt-1">{message}</p>
         )}
         <div className="flex gap-3 justify-end mt-2">
