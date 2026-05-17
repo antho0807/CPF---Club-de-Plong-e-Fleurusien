@@ -29,10 +29,22 @@ export function useEvents() {
 
   async function createEvent(event: Partial<Event>): Promise<void> {
     const { dive_sites: _d, event_registrations: _r, ...insertable } = event as Record<string, unknown>
-    const { error } = await supabase
+    const { data: newEvent, error } = await supabase
       .from('events')
       .insert(insertable as TablesInsert<'events'>)
+      .select('id')
+      .single()
     if (error) throw error
+
+    // Inscrire automatiquement le créateur avec statut "confirmed"
+    if (newEvent?.id && insertable.created_by) {
+      await supabase.from('event_registrations').insert({
+        event_id: newEvent.id,
+        member_id: insertable.created_by as string,
+        status: 'confirmed',
+      })
+    }
+
     await refetch()
   }
 
@@ -136,6 +148,7 @@ export function useEvents() {
       }
     }
 
+    // Notifier le membre concerné
     await createNotification({
       userId: memberId,
       type: accept ? 'registration_confirmed' : 'registration_refused',
@@ -145,6 +158,26 @@ export function useEvents() {
         : `Votre inscription à « ${eventTitle} » a été refusée.`,
       data: { eventId },
     })
+
+    // Notifier les autres participants confirmés qu'un nouveau membre a rejoint
+    if (accept) {
+      const { data: confirmedRegs } = await supabase
+        .from('event_registrations')
+        .select('member_id')
+        .eq('event_id', eventId)
+        .eq('status', 'confirmed')
+        .neq('member_id', memberId)
+
+      await Promise.all((confirmedRegs ?? []).map((reg) =>
+        createNotification({
+          userId: reg.member_id,
+          type: 'registration_confirmed',
+          title: '🤿 Nouveau participant',
+          body: `Un membre a rejoint « ${eventTitle} ».`,
+          data: { eventId },
+        })
+      ))
+    }
 
     await refetch()
   }
@@ -285,6 +318,25 @@ export function useEventMessages(eventId: string | null) {
       sender_id: senderId,
       content: content.trim(),
     })
+
+    // Récupérer le titre de l'événement et les participants confirmés
+    const [{ data: ev }, { data: regs }] = await Promise.all([
+      supabase.from('events').select('title').eq('id', eventId).single(),
+      supabase.from('event_registrations').select('member_id').eq('event_id', eventId).eq('status', 'confirmed').neq('member_id', senderId),
+    ])
+
+    if (ev && regs?.length) {
+      await Promise.all(regs.map((reg) =>
+        createNotification({
+          userId: reg.member_id,
+          type: 'new_message',
+          title: `💬 ${ev.title}`,
+          body: content.trim().slice(0, 80),
+          data: { eventId },
+        })
+      ))
+    }
+
     await refetch()
   }
 
