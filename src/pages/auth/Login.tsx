@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Anchor, Mail, Lock, Loader2 } from 'lucide-react'
+import { Mail, Lock, Loader2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
@@ -29,7 +29,11 @@ export function Login() {
     setError(null)
     const { error } = await signIn(data.email, data.password)
     if (error) {
-      setError('Email ou mot de passe incorrect.')
+      if (error.message.toLowerCase().includes('email not confirmed')) {
+        setError('Veuillez confirmer votre email avant de vous connecter.')
+      } else {
+        setError('Email ou mot de passe incorrect.')
+      }
     } else {
       navigate('/')
     }
@@ -40,9 +44,7 @@ export function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4 shadow-lg">
-            <Anchor className="h-8 w-8 text-[#0077b6]" />
-          </div>
+          <img src="/logo-cpf.png" alt="CPF" className="w-24 h-24 object-contain mx-auto mb-3 drop-shadow-lg" />
           <h1 className="text-2xl font-bold text-white">CPF Plongée</h1>
           <p className="text-blue-200 text-sm mt-1">Club de Plongée Fleurusien · LIFRAS/CMAS</p>
         </div>
@@ -97,12 +99,19 @@ export function Login() {
             </Button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Pas encore de compte ?{' '}
-            <Link to="/register" className="text-[#0077b6] font-medium hover:underline">
-              S'inscrire
-            </Link>
-          </p>
+          <div className="mt-6 space-y-2 text-center text-sm text-gray-500">
+            <p>
+              <Link to="/forgot-password" className="text-[#0077b6] font-medium hover:underline">
+                Mot de passe oublié ?
+              </Link>
+            </p>
+            <p>
+              Pas encore de compte ?{' '}
+              <Link to="/register" className="text-[#0077b6] font-medium hover:underline">
+                S'inscrire
+              </Link>
+            </p>
+          </div>
         </div>
 
         <p className="text-center text-blue-200 text-xs mt-6">

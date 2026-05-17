@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Users, Calendar, MapPin, FileText, Info, LogOut, User, Anchor, Bell,
+  LayoutDashboard, Users, Calendar, MapPin, FileText, Info, LogOut, User, Bell, ShieldCheck, Target,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useNotifications } from '../../hooks/useNotifications'
@@ -10,6 +10,7 @@ import { cn } from '../../lib/utils'
 const navItems = [
   { to: '/', label: 'Tableau de bord', icon: LayoutDashboard },
   { to: '/calendrier', label: 'Calendrier', icon: Calendar },
+  { to: '/objectifs', label: 'Objectifs', icon: Target },
   { to: '/membres', label: 'Membres', icon: Users },
   { to: '/sites', label: 'Sites', icon: MapPin },
   { to: '/documents', label: 'Documents', icon: FileText },
@@ -17,7 +18,7 @@ const navItems = [
 ]
 
 export function Navbar() {
-  const { profile, signOut } = useAuth()
+  const { profile, signOut, isAdmin } = useAuth()
   const { notifications, unreadCount, markAllRead } = useNotifications(profile?.id)
   const [showNotifs, setShowNotifs] = useState(false)
   const location = useLocation()
@@ -26,8 +27,8 @@ export function Navbar() {
     <aside className="hidden md:flex flex-col w-64 min-h-screen bg-[#0077b6] text-white">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-white/20">
-        <div className="bg-white rounded-full p-2">
-          <Anchor className="h-6 w-6 text-[#0077b6]" />
+        <div className="bg-white rounded-full p-1 flex-shrink-0">
+          <img src="/logo-cpf.png" alt="CPF" className="h-8 w-8 object-contain" />
         </div>
         <div>
           <p className="font-bold text-sm leading-tight">CPF</p>
@@ -56,6 +57,24 @@ export function Navbar() {
           )
         })}
       </nav>
+
+      {/* Admin */}
+      {isAdmin && (
+        <div className="px-3 pb-2 border-t border-white/20 pt-2">
+          <Link
+            to="/admin/approbations"
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+              location.pathname === '/admin/approbations'
+                ? 'bg-white text-[#0077b6]'
+                : 'text-blue-100 hover:bg-white/10',
+            )}
+          >
+            <ShieldCheck className="h-5 w-5 flex-shrink-0" />
+            Approbations
+          </Link>
+        </div>
+      )}
 
       {/* Notifications */}
       <div className="px-3 pb-2 relative">

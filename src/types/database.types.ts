@@ -10,6 +10,8 @@ export type BrevetLevel =
 
 export type UserRole = 'admin' | 'moniteur' | 'membre'
 
+export type AccountStatus = 'pending' | 'approved' | 'rejected'
+
 export type DocumentType = 'carte_lifras' | 'certificat_medical' | 'caci' | 'autre'
 
 export type EventType =
@@ -43,6 +45,7 @@ export interface Profile {
   lifras_number: string | null
   brevet_level: BrevetLevel | null
   role: UserRole
+  status: AccountStatus
   is_active: boolean
   notes: string | null
   created_at: string

@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Input } from '../ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { useAuth } from '../../hooks/useAuth'
 import { useCompliance } from '../../hooks/useCompliance'
 import { useEvents, useEventExercises, useMemberProgress, useEventMessages } from '../../hooks/useEvents'
@@ -84,7 +85,7 @@ const RECOMMENDED: Partial<Record<BrevetLevel, { title: string; description: str
 export function EventModal({ event, open, onClose }: Props) {
   const { profile, isMoniteur } = useAuth()
   const { compliance } = useCompliance(profile?.id, profile?.brevet_level)
-  const { validateRegistration } = useEvents()
+  const { validateRegistration, registerToEvent, unregisterFromEvent } = useEvents()
   const { exercises, addExercise, removeExercise } = useEventExercises(event?.id ?? null)
   const { progress, setStatus: setProgressStatus, validate: validateProgress } = useMemberProgress(
     profile?.id ?? null,
@@ -96,8 +97,7 @@ export function EventModal({ event, open, onClose }: Props) {
   const [message, setMessage] = useState<string | null>(null)
   const [chatText, setChatText] = useState('')
   const [newExTitle, setNewExTitle] = useState('')
-
-  const { registerToEvent, unregisterFromEvent } = useEvents()
+  const [newExBrevet, setNewExBrevet] = useState<BrevetLevel | ''>('')
 
   if (!event || !profile) return null
 
@@ -129,11 +129,14 @@ export function EventModal({ event, open, onClose }: Props) {
   const requiresMedical = EVENT_TYPES_REQUIRE_MEDICAL.includes(ev.event_type)
   const deadlinePassed = ev.registration_deadline ? new Date() > new Date(ev.registration_deadline) : false
 
-  // Recommended exercises for member's brevet level
+  // Exercices recommandés pour progresser vers le PROCHAIN niveau
   const memberBrevetOrder = profile.brevet_level ? BREVET_ORDER[profile.brevet_level] : -1
+  const nextLevelOrder = memberBrevetOrder + 1
   const recommendedKey = (Object.keys(RECOMMENDED) as BrevetLevel[])
-    .filter((k) => BREVET_ORDER[k] <= memberBrevetOrder)
-    .sort((a, b) => BREVET_ORDER[b] - BREVET_ORDER[a])[0]
+    .find((k) => BREVET_ORDER[k] === nextLevelOrder)
+    ?? (Object.keys(RECOMMENDED) as BrevetLevel[])
+      .filter((k) => BREVET_ORDER[k] > memberBrevetOrder)
+      .sort((a, b) => BREVET_ORDER[a] - BREVET_ORDER[b])[0]
   const recommended = recommendedKey ? RECOMMENDED[recommendedKey] ?? [] : []
 
   async function handleRegister() {
@@ -144,7 +147,7 @@ export function EventModal({ event, open, onClose }: Props) {
         await unregisterFromEvent(ev.id, memberId)
         setMessage('Désinscrit avec succès.')
       } else {
-        await registerToEvent(ev.id, memberId)
+        await registerToEvent(ev.id, memberId, profile.full_name)
         setMessage('Demande envoyée — en attente de validation par l\'organisateur.')
       }
     } catch {
@@ -165,8 +168,9 @@ export function EventModal({ event, open, onClose }: Props) {
 
   async function handleAddExercise() {
     if (!newExTitle.trim()) return
-    await addExercise({ title: newExTitle, description: null, min_brevet: null, created_by: memberId })
+    await addExercise({ title: newExTitle, description: null, min_brevet: newExBrevet || null, created_by: memberId })
     setNewExTitle('')
+    setNewExBrevet('')
   }
 
   return (
@@ -339,9 +343,9 @@ export function EventModal({ event, open, onClose }: Props) {
                     {loading ? 'Traitement…' : 'S\'inscrire'}
                   </Button>
                 )}
-                {isRegistered && myStatus !== 'refused' && (
+                {isRegistered && (
                   <Button variant="outline" onClick={handleRegister} disabled={loading} className="flex-1">
-                    {loading ? 'Traitement…' : 'Se désinscrire'}
+                    {loading ? 'Traitement…' : myStatus === 'refused' ? 'Retirer ma candidature' : 'Se désinscrire'}
                   </Button>
                 )}
                 <Button variant="ghost" onClick={onClose}>Fermer</Button>
@@ -410,13 +414,24 @@ export function EventModal({ event, open, onClose }: Props) {
             {isMoniteur && (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ajouter un exercice</p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Input
                     placeholder="Titre de l'exercice…"
                     value={newExTitle}
                     onChange={(e) => setNewExTitle(e.target.value)}
-                    className="text-sm"
+                    className="text-sm flex-1 min-w-0"
                   />
+                  <Select value={newExBrevet} onValueChange={(v) => setNewExBrevet(v as BrevetLevel | '')}>
+                    <SelectTrigger className="w-36 text-xs shrink-0">
+                      <SelectValue placeholder="Niveau min." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Tous niveaux</SelectItem>
+                      {(Object.entries(BREVET_LABELS) as [BrevetLevel, string][]).map(([k, v]) => (
+                        <SelectItem key={k} value={k}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Button size="sm" onClick={handleAddExercise} disabled={!newExTitle.trim()} className="gap-1 shrink-0">
                     <Plus className="h-3.5 w-3.5" /> Ajouter
                   </Button>

@@ -18,17 +18,18 @@ export function useAuth() {
         .single()
 
       if (error) {
+        console.error('[fetchProfile] erreur Supabase:', error.code, error.message)
         // PGRST116 = aucun résultat → trigger peut être lent, on retente une fois
         if (error.code === 'PGRST116') {
           await new Promise((r) => setTimeout(r, 800))
-          const { data: retryData } = await supabase
+          const { data: retryData, error: retryError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', userId)
             .single()
+          if (retryError) console.error('[fetchProfile] retry erreur:', retryError.code, retryError.message)
           setProfile((retryData ?? null) as Profile | null)
         }
-        // Autre erreur (réseau, RLS…) → profile reste null, l'UI gère le cas
       } else {
         setProfile(data as Profile | null)
       }
@@ -40,16 +41,27 @@ export function useAuth() {
   }, [])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
-        setLoading(false)
-      }
-    })
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          fetchProfile(session.user.id)
+        } else {
+          setLoading(false)
+        }
+      })
+      .catch(() => setLoading(false)) // Filet de sécurité si getSession échoue
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Intercepte PASSWORD_RECOVERY avant tout pour éviter la redirection vers le dashboard
+      if (_event === 'PASSWORD_RECOVERY') {
+        setUser(session?.user ?? null) // nécessaire pour que updateUser fonctionne
+        setLoading(false)
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('reset-password')) {
+          window.location.replace('/reset-password')
+        }
+        return
+      }
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id)
@@ -94,6 +106,9 @@ export function useAuth() {
   const isAdmin = profile?.role === 'admin'
   const isMoniteur = profile?.role === 'moniteur' || isAdmin
   const isMembre = !!profile
+  const isApproved = profile?.status === 'approved'
+  const isPending = profile?.status === 'pending'
+  const isRejected = profile?.status === 'rejected'
   // Peut créer des événements : admin/moniteur OU brevet P3★+
   const canCreateEvents = profile ? canCreateAnyEvent(profile.role, profile.brevet_level) : false
 
@@ -104,6 +119,9 @@ export function useAuth() {
     isAdmin,
     isMoniteur,
     isMembre,
+    isApproved,
+    isPending,
+    isRejected,
     canCreateEvents,
     signIn,
     signUp,

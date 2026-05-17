@@ -60,7 +60,7 @@ export function useEvents() {
    * Inscription d'un membre → statut "pending" par défaut.
    * Crée une notification pour l'organisateur de l'événement.
    */
-  async function registerToEvent(eventId: string, memberId: string): Promise<void> {
+  async function registerToEvent(eventId: string, memberId: string, memberName?: string): Promise<void> {
     const { error } = await supabase.from('event_registrations').insert({
       event_id: eventId,
       member_id: memberId,
@@ -68,16 +68,13 @@ export function useEvents() {
     })
     if (error) throw error
 
-    // Notifier l'organisateur (ou les moniteurs/admins)
     const event = events.find((e) => e.id === eventId)
     if (event?.organizer_id) {
-      const member = (event.event_registrations ?? []).find((r) => r.member_id === memberId)
-      const memberName = (member?.profiles as { full_name?: string } | undefined)?.full_name ?? 'Un membre'
       await createNotification({
         userId: event.organizer_id,
         type: 'registration_pending',
         title: 'Nouvelle demande d\'inscription',
-        body: `${memberName} souhaite s'inscrire à « ${event.title} ».`,
+        body: `${memberName ?? 'Un membre'} souhaite s'inscrire à « ${event.title} ».`,
         data: { eventId, memberId },
       })
     }
@@ -114,6 +111,30 @@ export function useEvents() {
 
     const event = events.find((e) => e.id === eventId)
     const eventTitle = event?.title ?? 'un événement'
+
+    if (accept) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', memberId)
+        .single()
+
+      if (profile) {
+        const eventDate = event?.date_start
+          ? new Date(event.date_start).toLocaleDateString('fr-BE', {
+              weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+            })
+          : 'date à confirmer'
+
+        const eventLocation = (event as Record<string, unknown> & { dive_sites?: { name?: string } })
+          ?.dive_sites?.name
+
+        // Envoi non-bloquant : l'inscription est confirmée même si l'email échoue
+        supabase.functions.invoke('send-confirmation-email', {
+          body: { to: profile.email, memberName: profile.full_name, eventTitle, eventDate, eventLocation },
+        }).catch(console.error)
+      }
+    }
 
     await createNotification({
       userId: memberId,
@@ -248,7 +269,12 @@ export function useEventMessages(eventId: string | null) {
     setLoading(false)
   }, [eventId])
 
-  useEffect(() => { refetch() }, [refetch])
+  useEffect(() => {
+    refetch()
+    if (!eventId) return
+    const id = setInterval(refetch, 5_000)
+    return () => clearInterval(id)
+  }, [refetch])
 
   async function sendMessage(senderId: string, content: string): Promise<void> {
     if (!eventId || !content.trim()) return

@@ -26,7 +26,7 @@ serve(async (req) => {
   const { to, memberName, eventTitle, eventDate, eventLocation }: Payload = await req.json()
 
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-  const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'noreply@cpf-plongee.be'
+  const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'onboarding@resend.dev'
 
   if (!RESEND_API_KEY) {
     return new Response(JSON.stringify({ error: 'RESEND_API_KEY manquant' }), { status: 500 })

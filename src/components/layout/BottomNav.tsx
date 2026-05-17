@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Calendar, Users, MapPin, Info } from 'lucide-react'
+import { LayoutDashboard, Calendar, Users, Target, User } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
 const tabs = [
   { to: '/', label: 'Accueil', icon: LayoutDashboard },
   { to: '/calendrier', label: 'Agenda', icon: Calendar },
   { to: '/membres', label: 'Membres', icon: Users },
-  { to: '/sites', label: 'Sites', icon: MapPin },
-  { to: '/club', label: 'Club', icon: Info },
+  { to: '/objectifs', label: 'Objectifs', icon: Target },
+  { to: '/profil', label: 'Profil', icon: User },
 ]
 
 export function BottomNav() {

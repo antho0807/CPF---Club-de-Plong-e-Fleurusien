@@ -13,7 +13,9 @@ import type { CAMember } from '../types/database.types'
 
 const CA_ROLES = [
   'Président', 'Vice-Président', 'Secrétaire', 'Trésorier',
-  'Chef-Moniteur', 'Moniteur Fédéral', 'Membre CA',
+  'Chef-Moniteur', 'Moniteur Fédéral', 'Instructeur',
+  'Responsable Matériel', 'Boutique LIFRAS', 'Responsable Événements',
+  'Webmaster', 'Membre CA',
 ]
 
 function CAForm({ initial, onSubmit, onCancel }: {
@@ -121,55 +123,69 @@ export function ClubInfo() {
           <CardTitle className="text-lg">Fiche identité du club</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Logo + présentation */}
+          <div className="flex items-center gap-4 pb-2">
+            <img src="/logo-cpf.png" alt="Logo CPF" className="w-20 h-20 object-contain flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-gray-900">Club de Plongée Fleurusien</p>
+              <p className="text-sm text-gray-500">ASBL fondée en 1984 · ~50 membres</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Un club familial affilié à la LIFRAS et à la CMAS, basé à Fleurus (Hainaut, Belgique).
+              </p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Nom complet</p>
-              <p className="text-gray-900 font-medium">Club de Plongée Fleurusien (CPF)</p>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Siège social</p>
+              <p className="text-gray-900">Rue du Rabiseau, 6</p>
+              <p className="text-gray-500 text-xs">6220 Fleurus, Belgique</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Statut juridique</p>
-              <p className="text-gray-900 font-medium">ASBL (Association Sans But Lucratif)</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Localité</p>
-              <p className="text-gray-900">Fleurus, Province de Hainaut, Belgique</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Fédération</p>
-              <p className="text-gray-900 font-medium">LIFRAS asbl / CMAS Belgium</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Piscine principale</p>
-              <p className="text-gray-900">Centre sportif de Fleurus</p>
-              <p className="text-gray-500 text-xs">Rue de Wanfercée-Baulet, 6220 Fleurus</p>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Lieu d'entraînement</p>
+              <p className="text-gray-900">Piscine de Fleurus</p>
+              <p className="text-gray-500 text-xs">Rue de Fleurjoux, 50 – 6220 Fleurus</p>
             </div>
             <div>
               <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Horaires d'entraînement</p>
-              <p className="text-gray-900">Mercredi soir · Dimanche matin</p>
-              <p className="text-gray-500 text-xs">Se référer au calendrier pour les horaires exacts</p>
+              <p className="text-gray-900 font-medium">Mardi 20h00 – 21h30</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Contact général</p>
-              <p className="text-gray-900">cpf.plongee@gmail.com</p>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Fédération</p>
+              <p className="text-gray-900 font-medium">LIFRAS asbl · Club n° 202</p>
+              <p className="text-gray-500 text-xs">CMAS Belgium</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Site LIFRAS</p>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Contact</p>
+              <a href="mailto:info@cpfleurusien.be" className="text-[#0077b6] hover:underline">
+                info@cpfleurusien.be
+              </a>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Site officiel</p>
               <a
-                href="https://www.lifras.be"
+                href="https://www.cpfleurusien.be"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#0077b6] flex items-center gap-1 hover:underline"
               >
-                www.lifras.be <ExternalLink className="h-3 w-3" />
+                www.cpfleurusien.be <ExternalLink className="h-3 w-3" />
               </a>
             </div>
+            <div>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Numéro BCE</p>
+              <p className="text-gray-900">BE 0429.763.052</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">IBAN (ING)</p>
+              <p className="text-gray-900 font-mono text-xs">BE19 3631 0410 7312</p>
+            </div>
             <div className="sm:col-span-2">
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-1">Affiliations & agréments</p>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-1">Affiliations</p>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="outline">LIFRAS</Badge>
                 <Badge variant="outline">CMAS Belgium</Badge>
                 <Badge variant="outline">ADEPS (Wallonie)</Badge>
-                <Badge variant="outline">Commune de Fleurus</Badge>
               </div>
             </div>
           </div>
@@ -184,11 +200,6 @@ export function ClubInfo() {
               <li>Après tout accident de plongée : reprise interdite sans nouvel examen médical</li>
               <li>Cotisation annuelle à jour obligatoire pour plonger</li>
             </ul>
-          </div>
-
-          <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
-            <p className="font-semibold mb-1">ℹ️ Informations à vérifier</p>
-            <p className="text-xs">Les coordonnées exactes (téléphone, numéro LIFRAS, horaires précis) sont à confirmer avec votre responsable de club. Cette fiche sera mise à jour par les administrateurs.</p>
           </div>
         </CardContent>
       </Card>
