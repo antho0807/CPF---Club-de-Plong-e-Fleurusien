@@ -14,7 +14,7 @@ interface Payload  { user_ids?: string[]; title: string; body: string; url?: str
 const enc = new TextEncoder()
 
 function dec(s: string): Uint8Array {
-  const b = s.replace(/-/g, '+').replace(/_/g, '/')
+  const b = s.trim().replace(/-/g, '+').replace(/_/g, '/').replace(/=/g, '')
   return Uint8Array.from(atob(b + '='.repeat((4 - b.length % 4) % 4)), c => c.charCodeAt(0))
 }
 
@@ -40,8 +40,7 @@ function pkcs8(raw: Uint8Array): ArrayBuffer {
 // ─── VAPID JWT ────────────────────────────────────────────────
 
 async function vapidJwt(endpoint: string, sub: string, pub: string, priv: string): Promise<string> {
-  // JWK : extraire x et y depuis la clé publique non-compressée (65 octets)
-  const pubBytes = dec(pub)
+const pubBytes = dec(pub)
   const x = enc64(pubBytes.slice(1, 33))
   const y = enc64(pubBytes.slice(33, 65))
 
@@ -117,9 +116,9 @@ serve(async (req) => {
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   if (!subs?.length) return new Response(JSON.stringify({ sent: 0 }), { status: 200 })
 
-  const PRIV = Deno.env.get('VAPID_PRIVATE_KEY')!
-  const PUB  = Deno.env.get('VAPID_PUBLIC_KEY')!
-  const SUB  = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:noreply@app-cpf.be'
+  const PRIV = Deno.env.get('VAPID_PRIVATE_KEY')!.trim()
+  const PUB  = Deno.env.get('VAPID_PUBLIC_KEY')!.trim()
+  const SUB  = (Deno.env.get('VAPID_SUBJECT') ?? 'mailto:noreply@app-cpf.be').trim()
 
   const payload = JSON.stringify({ title, body, url: url ?? '/', icon: '/logo-cpf.png' })
 
