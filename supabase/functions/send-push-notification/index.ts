@@ -59,6 +59,23 @@ const pubBytes = dec(pub)
 
 // ─── Chiffrement aes128gcm (RFC 8291 / RFC 8188) ─────────────
 
+// HMAC-SHA-256 brut
+async function hmac(key: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
+  const k = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  return new Uint8Array(await crypto.subtle.sign('HMAC', k, data))
+}
+
+// HKDF-Extract(salt, IKM) = HMAC(salt, IKM)
+async function hkdfExtract(salt: Uint8Array, ikm: Uint8Array): Promise<Uint8Array> {
+  return hmac(salt, ikm)
+}
+
+// HKDF-Expand(PRK, info, len) — pour len ≤ 32 octets (un seul bloc T1)
+async function hkdfExpand(prk: Uint8Array, info: Uint8Array, len: number): Promise<Uint8Array> {
+  return (await hmac(prk, concat(info, new Uint8Array([1])))).slice(0, len)
+}
+
+// HKDF complet (Extract + Expand) via Web Crypto — pour CEK et nonce
 async function hkdf(salt: Uint8Array, ikm: Uint8Array, info: Uint8Array, len: number): Promise<Uint8Array> {
   const k = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits'])
   return new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info }, k, len * 8))
@@ -82,11 +99,15 @@ async function encrypt(plaintext: string, s: PushSub): Promise<Uint8Array> {
   const auth = dec(s.keys.auth)
   const salt = crypto.getRandomValues(new Uint8Array(16))
 
-  // RFC 8291 key derivation
-  const info_wp = concat(enc.encode('WebPush: info\0'), recvPubRaw, sendPubRaw)
-  const prk = await hkdf(auth, ecdhBits, new Uint8Array(0), 32)
-  const ikm = await hkdf(new Uint8Array(0), prk, info_wp, 32)
+  // RFC 8291 key derivation (correct)
+  // Étape 1 : PRK = HKDF-Extract(auth_secret, ecdh_secret) = HMAC(auth, ecdh)
+  const prk = await hkdfExtract(auth, ecdhBits)
 
+  // Étape 2 : IKM = HKDF-Expand(PRK, "WebPush: info\0" || recv_pub || send_pub, 32)
+  const keyInfo = concat(enc.encode('WebPush: info\0'), recvPubRaw, sendPubRaw)
+  const ikm = await hkdfExpand(prk, keyInfo, 32)
+
+  // Étapes 3/4 : CEK et nonce via HKDF complet avec le sel 16 octets
   const cek   = await hkdf(salt, ikm, enc.encode('Content-Encoding: aes128gcm\0'), 16)
   const nonce = await hkdf(salt, ikm, enc.encode('Content-Encoding: nonce\0'), 12)
 
