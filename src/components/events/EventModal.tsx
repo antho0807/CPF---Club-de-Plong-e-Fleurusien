@@ -108,7 +108,7 @@ export function EventModal({ event, open, onClose }: Props) {
   // Charger le profil du créateur
   useEffect(() => {
     if (!event?.created_by) return
-    supabase.from('profiles').select('full_name, alias').eq('id', event.created_by).single()
+    supabase.from('profiles').select('full_name, alias').eq('id', event.created_by).maybeSingle()
       .then(({ data }) => data && setCreator(data as { full_name: string; alias: string | null }))
   }, [event?.created_by])
 

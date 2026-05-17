@@ -25,7 +25,7 @@ export function usePushNotifications(userId: string | null) {
       .from('push_subscriptions')
       .select('id')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
       .then(({ data }) => setSubscribed(!!data))
   }, [userId, supported])
 

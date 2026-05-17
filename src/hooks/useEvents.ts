@@ -129,7 +129,7 @@ export function useEvents() {
         .from('profiles')
         .select('email, full_name')
         .eq('id', memberId)
-        .single()
+        .maybeSingle()
 
       if (profile) {
         const eventDate = event?.date_start
