@@ -22,6 +22,7 @@ function SiteCard({ site, onEdit, onDelete, isAdmin }: {
   isAdmin: boolean
 }) {
   const [showDetails, setShowDetails] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const Icon = SITE_ICONS[site.site_type] ?? MapPin
 
   return (
@@ -63,7 +64,7 @@ function SiteCard({ site, onEdit, onDelete, isAdmin }: {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-red-500 hover:bg-red-50"
-                    onClick={() => onDelete(site.id)}
+                    onClick={() => setShowDeleteConfirm(true)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -73,6 +74,30 @@ function SiteCard({ site, onEdit, onDelete, isAdmin }: {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog confirmation suppression */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" /> Supprimer ce site
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600 py-2">
+            Êtes-vous sûr de vouloir supprimer <strong>{site.name}</strong> ?<br />
+            Cette action est irréversible.
+          </p>
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Annuler</Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => { setShowDeleteConfirm(false); onDelete(site.id) }}
+            >
+              Supprimer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Details dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
@@ -199,7 +224,6 @@ export function DiveSites() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Supprimer ce site de plongée ? Cette action est irréversible.')) return
     await supabase.from('dive_sites').delete().eq('id', id)
     await fetchSites()
   }
