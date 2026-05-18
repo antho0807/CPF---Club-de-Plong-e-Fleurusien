@@ -13,7 +13,7 @@ export function useCATreasury() {
       .select('*, profiles(full_name, alias)')
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
-    setTransactions((data ?? []) as CATreasury[])
+    setTransactions((data ?? []) as unknown as CATreasury[])
     setLoading(false)
   }, [])
 

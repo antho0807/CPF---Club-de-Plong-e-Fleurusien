@@ -11,10 +11,15 @@ export function useCAStocks() {
     setLoading(true)
     const [{ data: prods }, { data: movs }] = await Promise.all([
       supabase.from('ca_stock_products').select('*').order('category').order('name'),
-      supabase.from('ca_stock_movements').select('*, ca_stock_products(name, unit), profiles(full_name, alias)').order('created_at', { ascending: false }).limit(100),
+      supabase.from('ca_stock_movements')
+        .select('*, ca_stock_products(name, unit), profiles(full_name, alias)')
+        .order('created_at', { ascending: false })
+        .limit(100),
     ])
     setProducts((prods ?? []) as CAStockProduct[])
-    setMovements((movs ?? []) as CAStockMovement[])
+    // Cast via unknown : les relations FK existent en base mais ne sont pas déclarées
+    // dans supabase.ts → TypeScript voit SelectQueryError, le runtime retourne bien les données
+    setMovements((movs ?? []) as unknown as CAStockMovement[])
     setLoading(false)
   }, [])
 
@@ -34,7 +39,9 @@ export function useCAStocks() {
   }
 
   async function updateProduct(id: string, updates: Partial<CAStockProduct>): Promise<void> {
-    const { error } = await supabase.from('ca_stock_products').update(updates).eq('id', id)
+    // Exclure les champs auto-gérés non acceptés par le type Update
+    const { id: _id, created_at: _c, ...updatable } = updates as Record<string, unknown>
+    const { error } = await supabase.from('ca_stock_products').update(updatable).eq('id', id)
     if (error) throw error
     await refetch()
   }
@@ -49,7 +56,6 @@ export function useCAStocks() {
     const { error: movErr } = await supabase.from('ca_stock_movements').insert(data)
     if (movErr) throw movErr
 
-    // Mettre à jour la quantité courante du produit
     const product = products.find((p) => p.id === data.product_id)
     if (product) {
       const newQty = product.quantity_current + data.quantity_change
