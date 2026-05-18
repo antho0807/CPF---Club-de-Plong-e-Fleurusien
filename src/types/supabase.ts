@@ -89,6 +89,43 @@ export interface Database {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          new_event: boolean
+          event_reminder: boolean
+          registration_update: boolean
+          new_message: boolean
+          account_approved: boolean
+          medical_expiry: boolean
+          club_announcement: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          new_event?: boolean
+          event_reminder?: boolean
+          registration_update?: boolean
+          new_message?: boolean
+          account_approved?: boolean
+          medical_expiry?: boolean
+          club_announcement?: boolean
+          updated_at?: string
+        }
+        Update: {
+          new_event?: boolean
+          event_reminder?: boolean
+          registration_update?: boolean
+          new_message?: boolean
+          account_approved?: boolean
+          medical_expiry?: boolean
+          club_announcement?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ca_stock_products: {
         Row: {
           id: string
