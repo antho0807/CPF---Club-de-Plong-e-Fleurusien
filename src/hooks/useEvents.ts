@@ -334,21 +334,25 @@ export function useEventMessages(eventId: string | null) {
       content: content.trim(),
     })
 
-    // Récupérer l'événement, les participants confirmés et le profil de l'expéditeur
-    const [{ data: ev }, { data: regs }, { data: senderProfile }] = await Promise.all([
+    // Récupérer l'événement, les participants et le profil de l'expéditeur en parallèle.
+    // get_confirmed_participants() est SECURITY DEFINER : contourne la RLS restrictive
+    // sur event_registrations pour les membres non-admin/non-organisateur.
+    const [{ data: ev }, { data: participants }, { data: senderProfile }] = await Promise.all([
       supabase.from('events').select('title, date_start').eq('id', eventId).single(),
-      supabase.from('event_registrations').select('member_id').eq('event_id', eventId).eq('status', 'confirmed').neq('member_id', senderId),
+      supabase.rpc('get_confirmed_participants', { p_event_id: eventId, p_exclude_user: senderId }),
       supabase.from('profiles').select('alias, full_name').eq('id', senderId).single(),
     ])
 
-    if (ev && regs?.length) {
+    if (ev && participants?.length) {
       const sender = displayName(senderProfile)
-      const dateStr = ev.date_start ? ` (${shortDate(ev.date_start)})` : ''
-      await Promise.all(regs.map((reg) =>
+      const dateStr = (ev as unknown as { date_start?: string }).date_start
+        ? ` (${shortDate((ev as unknown as { date_start: string }).date_start)})`
+        : ''
+      await Promise.all((participants as { member_id: string }[]).map((p) =>
         createNotification({
-          userId: reg.member_id,
+          userId: p.member_id,
           type: 'new_message',
-          title: `💬 ${sender} — ${ev.title}${dateStr}`,
+          title: `💬 ${sender} — ${(ev as unknown as { title: string }).title}${dateStr}`,
           body: content.trim().slice(0, 100),
           data: { eventId },
         })
