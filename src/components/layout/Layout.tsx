@@ -26,7 +26,7 @@ export function Layout() {
         backgroundAttachment: 'fixed',
       }}
     >
-      <div className="fixed inset-0 -z-10" style={{ background: 'rgba(15, 40, 80, 0.55)' }} />
+      <div className="fixed inset-0 -z-10" style={{ background: 'rgba(241, 245, 249, 0.82)' }} />
 
       <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
 
