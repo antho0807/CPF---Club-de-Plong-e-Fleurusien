@@ -31,11 +31,11 @@ export function useEvents() {
 
   const refetch = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('events')
       .select('*, dive_sites(*), event_registrations(*, profiles(*))')
       .order('date_start')
-    setEvents(asEvents(data))
+    if (!error && data) setEvents(asEvents(data))
     setLoading(false)
   }, [])
 
@@ -70,7 +70,9 @@ export function useEvents() {
       .update(updatable as TablesUpdate<'events'>)
       .eq('id', id)
     if (error) throw error
-    await refetch()
+    // Mise à jour locale immédiate + refetch non-bloquant en arrière-plan
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...updatable } as Event : e))
+    refetch()
   }
 
   async function cancelEvent(id: string, reason: string): Promise<void> {
@@ -79,7 +81,9 @@ export function useEvents() {
       .update({ is_cancelled: true, cancel_reason: reason })
       .eq('id', id)
     if (error) throw error
-    await refetch()
+    // Mise à jour locale immédiate — pas de refetch bloquant
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, is_cancelled: true, cancel_reason: reason } : e))
+    refetch()
   }
 
   /**
