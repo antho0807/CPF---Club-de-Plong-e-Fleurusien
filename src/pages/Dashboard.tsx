@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Plus, UserPlus, Calendar, MapPin, Target, ChevronRight } from 'lucide-react'
+import { Plus, UserPlus, MapPin, Target, ChevronRight } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { ComplianceWidget } from '../components/dashboard/ComplianceWidget'
 import { StatsCards } from '../components/dashboard/StatsCards'
@@ -27,47 +27,35 @@ export function Dashboard() {
       {/* Stats — admin et moniteur uniquement */}
       {canManage && <StatsCards />}
 
-      {/* Actions rapides */}
-      <Card>
-        <CardContent className="p-4">
-          <p className="text-sm font-semibold text-gray-700 mb-3">Actions rapides</p>
-          <div className="flex flex-wrap gap-2">
-            {isAdmin && (
-              <Link to="/membres?action=new">
-                <Button size="sm" className="gap-2">
-                  <UserPlus className="h-4 w-4" /> Ajouter un membre
-                </Button>
-              </Link>
-            )}
-            {canManage && (
+      {/* Actions rapides — admin/moniteur uniquement */}
+      {canManage && (
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm font-semibold text-gray-700 mb-3">Actions rapides</p>
+            <div className="flex flex-wrap gap-2">
+              {isAdmin && (
+                <Link to="/membres?action=new">
+                  <Button size="sm" className="gap-2">
+                    <UserPlus className="h-4 w-4" /> Ajouter un membre
+                  </Button>
+                </Link>
+              )}
               <Link to="/calendrier?action=new">
                 <Button size="sm" variant="outline" className="gap-2">
                   <Plus className="h-4 w-4" /> Créer un événement
                 </Button>
               </Link>
-            )}
-            {isAdmin && (
-              <Link to="/sites?action=new">
-                <Button size="sm" variant="outline" className="gap-2">
-                  <MapPin className="h-4 w-4" /> Ajouter un site
-                </Button>
-              </Link>
-            )}
-            <Link to="/calendrier">
-              <Button size="sm" variant={canManage ? 'ghost' : 'outline'} className="gap-2">
-                <Calendar className="h-4 w-4" /> Voir le calendrier
-              </Button>
-            </Link>
-            {!canManage && (
-              <Link to="/objectifs">
-                <Button size="sm" variant="outline" className="gap-2">
-                  <Target className="h-4 w-4" /> Mes objectifs
-                </Button>
-              </Link>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              {isAdmin && (
+                <Link to="/sites?action=new">
+                  <Button size="sm" variant="outline" className="gap-2">
+                    <MapPin className="h-4 w-4" /> Ajouter un site
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Conformité médicale */}
       <ComplianceWidget profile={profile} />

@@ -21,6 +21,7 @@ import { PendingApproval } from './pages/PendingApproval'
 import { Rejected } from './pages/Rejected'
 import { AdminPending } from './pages/admin/AdminPending'
 import { CA } from './pages/CA'
+import { Settings } from './pages/Settings'
 
 function Spinner() {
   return (
@@ -107,6 +108,7 @@ export default function App() {
           <Route path="utile" element={<Useful />} />
           <Route path="profil" element={<Profile />} />
           <Route path="ca" element={<CA />} />
+          <Route path="parametres" element={<Settings />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -118,15 +118,52 @@ export function Calendar() {
     }
   }
 
+  // Expanse les événements récurrents (FREQ=WEEKLY;BYDAY=XX) sur 12 mois
+  const expandedEvents = useMemo(() => {
+    const DAY: Record<string, number> = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 }
+    const rangeStart = new Date(); rangeStart.setMonth(rangeStart.getMonth() - 1)
+    const rangeEnd = new Date(); rangeEnd.setFullYear(rangeEnd.getFullYear() + 1)
+    const result: Event[] = []
+
+    for (const ev of events) {
+      if (!ev.is_recurring || !ev.recurrence_rule) { result.push(ev); continue }
+      const dayMatch = ev.recurrence_rule.match(/BYDAY=(\w{2})/)
+      if (!dayMatch || !ev.recurrence_rule.includes('FREQ=WEEKLY')) { result.push(ev); continue }
+      const targetDay = DAY[dayMatch[1]]
+      if (targetDay === undefined) { result.push(ev); continue }
+
+      const base = new Date(ev.date_start)
+      const duration = ev.date_end
+        ? new Date(ev.date_end).getTime() - base.getTime()
+        : 90 * 60 * 1000
+
+      const cur = new Date(rangeStart)
+      cur.setHours(base.getHours(), base.getMinutes(), 0, 0)
+      while (cur.getDay() !== targetDay) cur.setDate(cur.getDate() + 1)
+
+      while (cur <= rangeEnd) {
+        const occStart = new Date(cur)
+        result.push({
+          ...ev,
+          id: `${ev.id}_${occStart.toISOString().slice(0, 10)}`,
+          date_start: occStart.toISOString(),
+          date_end: new Date(occStart.getTime() + duration).toISOString(),
+        })
+        cur.setDate(cur.getDate() + 7)
+      }
+    }
+    return result
+  }, [events])
+
   const calendarEvents: RBCEvent[] = useMemo(
     () =>
-      events.map((e) => ({
-        title: e.title,
+      expandedEvents.map((e) => ({
+        title: e.is_recurring ? `🏊 ${e.title}` : e.title,
         start: new Date(e.date_start),
         end: e.date_end ? new Date(e.date_end) : new Date(e.date_start),
         resource: e,
       })),
-    [events],
+    [expandedEvents],
   )
 
   const eventPropGetter = useCallback((rbc: RBCEvent) => {
@@ -197,7 +234,12 @@ export function Calendar() {
             onView={setCalView}
             views={['month', 'week', 'agenda']}
             eventPropGetter={eventPropGetter}
-            onSelectEvent={(rbc) => setSelectedEventId((rbc.resource as Event).id)}
+            onSelectEvent={(rbc) => {
+              const id = (rbc.resource as Event).id
+              // Pour les occurrences récurrentes, id = "uuid_date" → on ouvre l'événement de base
+              const baseId = id.length > 36 ? id.substring(0, 36) : id
+              setSelectedEventId(baseId)
+            }}
             onSelectSlot={handleSelectSlot}
             selectable
             style={{ height: calView === 'agenda' ? undefined : 600 }}

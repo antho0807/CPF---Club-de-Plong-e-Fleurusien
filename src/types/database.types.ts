@@ -127,6 +127,8 @@ export interface Event {
   created_by: string | null
   is_cancelled: boolean
   cancel_reason: string | null
+  is_recurring: boolean
+  recurrence_rule: string | null
   created_at: string
   // Joined
   dive_sites?: DiveSite

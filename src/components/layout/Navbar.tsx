@@ -1,11 +1,9 @@
-import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Calendar, MapPin, Info, LogOut, User, Bell,
-  ShieldCheck, Target, Lightbulb, Briefcase,
+  LayoutDashboard, Calendar, MapPin, Info, LogOut, User,
+  ShieldCheck, Target, Lightbulb, Briefcase, Settings,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-import { useNotifications } from '../../hooks/useNotifications'
 import { cn } from '../../lib/utils'
 
 const navItems = [
@@ -21,8 +19,6 @@ interface NavbarProps { onClose?: () => void }
 
 export function Navbar({ onClose }: NavbarProps = {}) {
   const { profile, signOut, isAdmin, isCA } = useAuth()
-  const { notifications, unreadCount, markAllRead } = useNotifications(profile?.id)
-  const [showNotifs, setShowNotifs] = useState(false)
   const location = useLocation()
 
   return (
@@ -93,36 +89,19 @@ export function Navbar({ onClose }: NavbarProps = {}) {
         </div>
       )}
 
-      {/* Notifications */}
-      <div className="px-3 pb-2 relative">
-        <button
-          onClick={() => { setShowNotifs((v) => !v); if (unreadCount > 0) markAllRead() }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors"
+      {/* Paramètres */}
+      <div className="px-3 pb-2">
+        <Link
+          to="/parametres"
+          onClick={onClose}
+          className={cn(
+            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+            location.pathname === '/parametres' ? 'bg-white text-[#0077b6]' : 'text-blue-100 hover:bg-white/10',
+          )}
         >
-          <div className="relative">
-            <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </div>
-          Notifications
-        </button>
-        {showNotifs && (
-          <div className="absolute bottom-full left-3 right-3 mb-1 bg-white rounded-xl shadow-xl border border-gray-100 max-h-72 overflow-y-auto z-50">
-            {notifications.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">Aucune notification</p>
-            ) : (
-              notifications.slice(0, 10).map((n) => (
-                <div key={n.id} className={`px-4 py-3 border-b border-gray-50 last:border-0 ${!n.read_at ? 'bg-blue-50' : ''}`}>
-                  <p className="text-xs font-semibold text-gray-900">{n.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{n.body}</p>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+          <Settings className="h-5 w-5" />
+          Paramètres
+        </Link>
       </div>
 
       {/* User section */}
