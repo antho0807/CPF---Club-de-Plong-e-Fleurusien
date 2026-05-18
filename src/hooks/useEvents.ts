@@ -347,14 +347,13 @@ export function useEventMessages(eventId: string | null) {
 
     if (ev && participants?.length) {
       const sender = displayName(senderProfile)
-      const dateStr = (ev as unknown as { date_start?: string }).date_start
-        ? ` (${shortDate((ev as unknown as { date_start: string }).date_start)})`
-        : ''
-      await Promise.all((participants as { member_id: string }[]).map((p) =>
+      const evTyped = ev as unknown as { title: string; date_start?: string }
+      const dateStr = evTyped.date_start ? ` (${shortDate(evTyped.date_start)})` : ''
+      await Promise.all((participants as unknown as { member_id: string }[]).map((p) =>
         createNotification({
           userId: p.member_id,
           type: 'new_message',
-          title: `💬 ${sender} — ${(ev as unknown as { title: string }).title}${dateStr}`,
+          title: `💬 ${sender} — ${evTyped.title}${dateStr}`,
           body: content.trim().slice(0, 100),
           data: { eventId },
         })

@@ -684,6 +684,10 @@ export interface Database {
         Args: { user_id: string }
         Returns: string
       }
+      get_confirmed_participants: {
+        Args: { p_event_id: string; p_exclude_user: string }
+        Returns: { member_id: string }[]
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
