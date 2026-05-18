@@ -49,7 +49,7 @@ export function useNotifications(userId: string | undefined) {
   return { notifications, unreadCount, markRead, markAllRead, refetch: fetch }
 }
 
-/** Crée une notification en base (appelée depuis useEvents) */
+/** Crée une notification en base ET envoie un push si l'utilisateur est abonné */
 export async function createNotification(params: {
   userId: string
   type: Notification['type']
@@ -57,6 +57,7 @@ export async function createNotification(params: {
   body: string
   data?: Record<string, unknown>
 }): Promise<void> {
+  // 1. Notification in-app (toujours)
   await supabase.from('notifications').insert({
     user_id: params.userId,
     type: params.type,
@@ -64,4 +65,14 @@ export async function createNotification(params: {
     body: params.body,
     data: params.data ?? {},
   })
+
+  // 2. Push notification — non bloquant, échec silencieux
+  supabase.functions.invoke('send-push-notification', {
+    body: {
+      user_ids: [params.userId],
+      notification_type: params.type,
+      title: params.title,
+      body: params.body,
+    },
+  }).catch(() => { /* push non critique */ })
 }

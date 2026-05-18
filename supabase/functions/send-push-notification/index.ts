@@ -7,7 +7,22 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 interface PushSub { endpoint: string; keys: { p256dh: string; auth: string } }
-interface Payload  { user_ids?: string[]; title: string; body: string; url?: string }
+interface Payload  { user_ids?: string[]; notification_type?: string; title: string; body: string; url?: string }
+
+// Mapping type de notification → colonne dans notification_preferences
+const PREF_MAP: Record<string, string> = {
+  registration_pending:  'registration_update',
+  registration_confirmed:'registration_update',
+  registration_refused:  'registration_update',
+  exercise_validated:    'registration_update',
+  exercise_refused:      'registration_update',
+  new_message:           'new_message',
+  new_event:             'new_event',
+  event_reminder:        'event_reminder',
+  account_approved:      'account_approved',
+  medical_expiry:        'medical_expiry',
+  club_announcement:     'club_announcement',
+}
 
 // ─── Base64url ────────────────────────────────────────────────
 
@@ -126,12 +141,32 @@ async function encrypt(plaintext: string, s: PushSub): Promise<Uint8Array> {
 // ─── Handler ─────────────────────────────────────────────────
 
 serve(async (req) => {
-  const { user_ids, title, body, url }: Payload = await req.json()
+  const { user_ids, notification_type, title, body, url }: Payload = await req.json()
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
+  // Filtrer les utilisateurs qui ont désactivé ce type de notification
+  let eligibleUserIds = user_ids ?? []
+  const prefCol = notification_type ? PREF_MAP[notification_type] : null
+
+  if (prefCol && eligibleUserIds.length > 0) {
+    const { data: prefs } = await supabase
+      .from('notification_preferences')
+      .select(`user_id, ${prefCol}`)
+      .in('user_id', eligibleUserIds)
+
+    if (prefs) {
+      // Exclure les users qui ont explicitement désactivé ce type
+      const disabled = new Set(prefs.filter((p: Record<string, unknown>) => p[prefCol] === false).map((p: Record<string, unknown>) => p.user_id as string))
+      eligibleUserIds = eligibleUserIds.filter((id) => !disabled.has(id))
+    }
+    // Si un user n'a pas de ligne dans notification_preferences → préférence par défaut = true → inclus
+  }
+
+  if (!eligibleUserIds.length) return new Response(JSON.stringify({ sent: 0, skipped: 'preferences' }), { status: 200 })
+
   let q = supabase.from('push_subscriptions').select('subscription, user_id')
-  if (user_ids?.length) q = q.in('user_id', user_ids)
+  if (eligibleUserIds.length) q = q.in('user_id', eligibleUserIds)
   const { data: subs, error } = await q
 
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 })
