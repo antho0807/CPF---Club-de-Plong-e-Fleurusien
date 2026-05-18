@@ -130,6 +130,9 @@ export function MemberProfile() {
             className={`gap-2 text-xs ${member.is_ca ? 'text-amber-700 border-amber-300 hover:bg-amber-50' : 'text-gray-600'}`}
             onClick={async () => {
               await updateMember(member.id, { is_ca: !member.is_ca })
+              // Rafraîchir le profil en mémoire si c'est le compte courant
+              if (isOwnProfile) await refreshProfile()
+              await refetchMember()
             }}
           >
             {member.is_ca ? '🏛 Retirer du CA' : '🏛 Ajouter au CA'}
