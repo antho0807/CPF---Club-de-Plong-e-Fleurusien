@@ -60,6 +60,21 @@ body {
 /* L'overlay rgba(241,245,249,0.82) est clair → textes normaux restent lisibles.
    Aucun changement de couleur nécessaire — même rendu que la replica. */
 
+/* ─── Glass cards sur fond image plongée ─── */
+.rounded-xl.bg-white,
+.rounded-xl.bg-white\/90,
+.rounded-xl.bg-white\/92 {
+  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border-color: rgba(255,255,255,0.45) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18) !important;
+}
+
+/* Titres de page sur fond sombre */
+main h1.font-bold { color: #ffffff !important; text-shadow: 0 1px 6px rgba(0,0,0,0.4); }
+main h1.font-bold + p { color: rgba(255,255,255,0.75) !important; }
+
 /* ─── react-big-calendar — Design moderne ─── */
 
 .rbc-calendar {

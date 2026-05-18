@@ -19,14 +19,13 @@ export function Layout() {
     <div
       className="flex min-h-[100dvh] relative"
       style={{
-        backgroundImage: "url('/bg-plongee.jpg')",
+        backgroundImage: "linear-gradient(rgba(8,28,60,0.52),rgba(8,28,60,0.52)),url('/image-plongee.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
       }}
     >
-      <div className="fixed inset-0 -z-10 bg-black/50" />
 
       <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
 
