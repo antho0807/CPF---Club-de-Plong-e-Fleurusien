@@ -43,7 +43,6 @@ const messages = {
 const VIEW_OPTIONS: { key: View; label: string }[] = [
   { key: 'month', label: 'Mois' },
   { key: 'week', label: 'Semaine' },
-  { key: 'day', label: 'Jour' },
   { key: 'agenda', label: 'Agenda' },
 ]
 
@@ -98,6 +97,7 @@ export function Calendar() {
   const { canCreateEvents, profile, isAdmin } = useAuth()
   const birthdays = useBirthdays(profile?.id)
   const [birthdayPopup, setBirthdayPopup] = useState<{ names: string[]; label: string } | null>(null)
+  const [dayPopup, setDayPopup] = useState<Date | null>(null)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
 
   // Toujours utiliser l'événement en direct depuis le tableau pour avoir les inscriptions à jour
@@ -210,15 +210,14 @@ export function Calendar() {
     return isHoliday ? { style: { backgroundColor: '#f9fafb' } } : {}
   }, [events])
 
-  // Clic sur le chiffre de la date → vue Jour pour cette date
+  // Clic sur le chiffre → popup de la journée
   const DateHeaderComponent = useCallback(({ date, label }: { date: Date; label: string; onDrillDown: (e: React.SyntheticEvent) => void }) => {
     const dayBdays = birthdays.filter(b => b.day === date.getDate() && b.month === date.getMonth() + 1)
     return (
       <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
         <button
-          onClick={(e) => { e.stopPropagation(); setCalDate(date); setCalView('day') }}
+          onClick={(e) => { e.stopPropagation(); setDayPopup(date) }}
           className="rbc-button-link"
-          title="Voir la journée"
         >
           {label}
         </button>
@@ -284,7 +283,7 @@ export function Calendar() {
             onNavigate={setCalDate}
             view={calView}
             onView={setCalView}
-            views={['month', 'week', 'day', 'agenda']}
+            views={['month', 'week', 'agenda']}
             eventPropGetter={eventPropGetter}
             dayPropGetter={dayPropGetter}
             components={{ toolbar: CalendarToolbar, month: { dateHeader: DateHeaderComponent } }}
@@ -309,6 +308,92 @@ export function Calendar() {
         onClose={() => setSelectedEventId(null)}
       />
 
+
+      {/* ── Popup journée ── */}
+      {dayPopup && (() => {
+        const isoDay = `${dayPopup.getFullYear()}-${String(dayPopup.getMonth()+1).padStart(2,'0')}-${String(dayPopup.getDate()).padStart(2,'0')}`
+        const dayEvents = expandedEvents.filter(e => e.date_start.slice(0,10) === isoDay)
+        const dayBdays = birthdays.filter(b => b.day === dayPopup.getDate() && b.month === dayPopup.getMonth()+1)
+        const dateLabel = dayPopup.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+        function openCreate() {
+          const y = dayPopup.getFullYear()
+          const m = String(dayPopup.getMonth()+1).padStart(2,'0')
+          const d = String(dayPopup.getDate()).padStart(2,'0')
+          setPrefillDate(`${y}-${m}-${d}T09:00`)
+          setShowForm(true)
+          setDayPopup(null)
+        }
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-start justify-center pt-14 px-4 pb-4" onClick={() => setDayPopup(null)}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100" onClick={e => e.stopPropagation()}>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 bg-[#0077b6] text-white">
+                <div>
+                  <p className="font-bold capitalize leading-tight">{dateLabel}</p>
+                  {dayBdays.length > 0 && (
+                    <p className="text-xs text-blue-200 mt-0.5">🎂 {dayBdays.map(b => b.name).join(' · ')}</p>
+                  )}
+                </div>
+                <button onClick={() => setDayPopup(null)} className="text-white/70 hover:text-white text-2xl leading-none ml-4">×</button>
+              </div>
+
+              {/* Événements */}
+              <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                {dayEvents.length === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-8">Aucun événement ce jour.</p>
+                ) : (
+                  dayEvents.map((ev, i) => {
+                    const color = EVENT_TYPE_COLORS[ev.event_type]
+                    const time = new Date(ev.date_start).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })
+                    const isFerie = ev.event_type === 'ferie'
+                    return (
+                      <div
+                        key={ev.id + i}
+                        className={`flex items-center gap-3 px-5 py-3 transition-colors ${!isFerie ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                        onClick={() => {
+                          if (isFerie) return
+                          const baseId = ev.id.length > 36 ? ev.id.substring(0, 36) : ev.id
+                          setSelectedEventId(baseId)
+                          setDayPopup(null)
+                        }}
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-semibold leading-snug ${isFerie ? 'text-gray-400' : 'text-gray-900'}`}>{ev.title}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {time}
+                            {ev.dive_sites && ` · ${(ev.dive_sites as { name: string }).name}`}
+                          </p>
+                        </div>
+                        {!isFerie && <span className="text-gray-300 text-xs flex-shrink-0">›</span>}
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+
+              {/* Créer un événement */}
+              {canCreateEvents ? (
+                <div className="px-5 py-3 border-t border-gray-100">
+                  <button
+                    onClick={openCreate}
+                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-[#0077b6] hover:text-[#005f8e] py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    <Plus className="h-4 w-4" /> Créer un événement ce jour
+                  </button>
+                </div>
+              ) : (
+                <div className="px-5 py-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-400 text-center">P3★ minimum requis pour créer un événement</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Popup anniversaire */}
       {birthdayPopup && (
