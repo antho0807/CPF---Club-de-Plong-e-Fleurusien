@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
+import { supabase } from '../../lib/supabase'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
 import { Label } from '../../components/ui/label'
@@ -40,9 +41,10 @@ export function Register() {
     } else {
       // Sauvegarder la date de naissance si fournie (le profil est créé par le trigger SQL)
       if (data.dateNaissance && authData?.user?.id) {
-        await import('../../lib/supabase').then(({ supabase }) =>
-          supabase.from('profiles').update({ date_naissance: data.dateNaissance }).eq('id', authData.user!.id)
-        )
+        await supabase
+          .from('profiles')
+          .update({ date_naissance: data.dateNaissance })
+          .eq('id', authData.user.id)
       }
       setSuccess(true)
     }
