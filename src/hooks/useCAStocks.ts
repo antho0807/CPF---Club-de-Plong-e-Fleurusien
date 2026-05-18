@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import type { TablesUpdate } from '../types/supabase'
 import type { CAStockProduct, CAStockMovement, StockCategory, StockReason } from '../types/database.types'
 
 export function useCAStocks() {
@@ -39,9 +40,11 @@ export function useCAStocks() {
   }
 
   async function updateProduct(id: string, updates: Partial<CAStockProduct>): Promise<void> {
-    // Exclure les champs auto-gérés non acceptés par le type Update
-    const { id: _id, created_at: _c, ...updatable } = updates as Record<string, unknown>
-    const { error } = await supabase.from('ca_stock_products').update(updatable).eq('id', id)
+    const { id: _id, created_at: _c, ...updatable } = updates
+    const { error } = await supabase
+      .from('ca_stock_products')
+      .update(updatable as TablesUpdate<'ca_stock_products'>)
+      .eq('id', id)
     if (error) throw error
     await refetch()
   }
