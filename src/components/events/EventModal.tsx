@@ -97,6 +97,9 @@ export function EventModal({ event, open, onClose }: Props) {
 
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [validateLoading, setValidateLoading] = useState<Record<string, boolean>>({})
+  const [registrationError, setRegistrationError] = useState<string | null>(null)
+  const [cancelLoading, setCancelLoading] = useState(false)
   const [chatText, setChatText] = useState('')
   const [newExTitle, setNewExTitle] = useState('')
   const [newExBrevet, setNewExBrevet] = useState<BrevetLevel | ''>('')
@@ -195,9 +198,10 @@ export function EventModal({ event, open, onClose }: Props) {
   }
 
   async function handleValidate(regMemberId: string, accept: boolean) {
+    setValidateLoading((prev) => ({ ...prev, [regMemberId]: true }))
+    setRegistrationError(null)
     try {
       await validateRegistration(ev.id, regMemberId, accept)
-      // Mise à jour immédiate du statut dans l'état local
       setLocalRegs((prev) =>
         prev.map((r) =>
           r.member_id === regMemberId
@@ -206,7 +210,9 @@ export function EventModal({ event, open, onClose }: Props) {
         )
       )
     } catch (e: unknown) {
-      setMessage('Erreur validation : ' + (e instanceof Error ? e.message : String(e)))
+      setRegistrationError((e instanceof Error ? e.message : String(e)))
+    } finally {
+      setValidateLoading((prev) => ({ ...prev, [regMemberId]: false }))
     }
   }
 
@@ -389,7 +395,7 @@ export function EventModal({ event, open, onClose }: Props) {
             )}
 
             {message && (
-              <p className={`text-sm font-medium ${message.includes('erreur') ? 'text-red-600' : 'text-green-600'}`}>
+              <p className={`text-sm font-medium ${message.toLowerCase().includes('erreur') ? 'text-red-600' : 'text-green-600'}`}>
                 {message}
               </p>
             )}
@@ -427,7 +433,7 @@ export function EventModal({ event, open, onClose }: Props) {
                 <Button size="sm" variant="outline" className="gap-1.5 flex-1" onClick={() => setShowEditForm(true)}>
                   ✏️ Modifier
                 </Button>
-                <Button size="sm" variant="outline" className="gap-1.5 flex-1 text-red-600 border-red-200 hover:bg-red-50" onClick={() => setShowCancelConfirm(true)}>
+                <Button size="sm" variant="outline" className="gap-1.5 flex-1 text-red-600 border-red-200 hover:bg-red-50" onClick={() => { setMessage(null); setShowCancelConfirm(true) }}>
                   🚫 Annuler l'événement
                 </Button>
               </div>
@@ -496,6 +502,9 @@ export function EventModal({ event, open, onClose }: Props) {
               <p className="text-sm font-semibold text-gray-700">
                 {registrations.length} demande(s) — {registrations.filter((r) => r.status === 'confirmed').length} confirmée(s)
               </p>
+              {registrationError && (
+                <p className="text-sm text-red-600 font-medium px-3 py-2 bg-red-50 rounded-lg border border-red-200">{registrationError}</p>
+              )}
               {registrations.length === 0 && (
                 <p className="text-sm text-gray-400 text-center py-4">Aucune inscription pour l'instant.</p>
               )}
@@ -524,17 +533,19 @@ export function EventModal({ event, open, onClose }: Props) {
                         <Button
                           size="sm"
                           className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700"
+                          disabled={!!validateLoading[reg.member_id]}
                           onClick={() => handleValidate(reg.member_id, true)}
                         >
-                          Valider
+                          {validateLoading[reg.member_id] ? '…' : 'Valider'}
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           className="h-7 px-2 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                          disabled={!!validateLoading[reg.member_id]}
                           onClick={() => handleValidate(reg.member_id, false)}
                         >
-                          Refuser
+                          {validateLoading[reg.member_id] ? '…' : 'Refuser'}
                         </Button>
                       </div>
                     )}
@@ -767,20 +778,24 @@ export function EventModal({ event, open, onClose }: Props) {
           <p className="text-xs text-red-500 mt-1">{message}</p>
         )}
         <div className="flex gap-3 justify-end mt-2">
-          <Button variant="outline" onClick={() => setShowCancelConfirm(false)}>Annuler</Button>
+          <Button variant="outline" disabled={cancelLoading} onClick={() => setShowCancelConfirm(false)}>Annuler</Button>
           <Button
             className="bg-red-600 hover:bg-red-700 text-white"
+            disabled={cancelLoading}
             onClick={async () => {
+              setCancelLoading(true)
               try {
                 await cancelEvent(ev.id, cancelReason || 'Annulé par l\'organisateur')
                 setShowCancelConfirm(false)
                 onClose()
               } catch (e) {
                 setMessage('Erreur : ' + (e instanceof Error ? e.message : String(e)))
+              } finally {
+                setCancelLoading(false)
               }
             }}
           >
-            Confirmer l'annulation
+            {cancelLoading ? 'Annulation…' : 'Confirmer l\'annulation'}
           </Button>
         </div>
       </DialogContent>
