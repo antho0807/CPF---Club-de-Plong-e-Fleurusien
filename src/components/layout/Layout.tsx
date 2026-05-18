@@ -16,16 +16,7 @@ export function Layout() {
   })
 
   return (
-    <div
-      className="flex min-h-[100dvh] relative"
-      style={{
-        backgroundImage: "linear-gradient(rgba(241,245,249,0.82), rgba(241,245,249,0.82)), url('/image-plongee.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
-      }}
-    >
+    <div className="flex min-h-[100dvh] relative">
 
       <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
 
