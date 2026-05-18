@@ -51,24 +51,20 @@ export function useEvents() {
   async function updateEvent(id: string, updates: Partial<Event>): Promise<void> {
     const { dive_sites: _d, event_registrations: _r, id: _id, created_at: _c, created_by: _cb, ...updatable } =
       updates as Record<string, unknown>
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('events')
       .update(updatable as TablesUpdate<'events'>)
       .eq('id', id)
-      .select()
     if (error) throw error
-    if (!data || data.length === 0) throw new Error('Modification refusée. Vérifiez vos droits.')
     await refetch()
   }
 
   async function cancelEvent(id: string, reason: string): Promise<void> {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('events')
       .update({ is_cancelled: true, cancel_reason: reason })
       .eq('id', id)
-      .select()
     if (error) throw error
-    if (!data || data.length === 0) throw new Error('Annulation refusée. Vérifiez vos droits.')
     await refetch()
   }
 
