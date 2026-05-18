@@ -57,47 +57,52 @@ export function StatsCards() {
     {
       label: 'Membres actifs',
       value: stats.totalActifs,
+      sub: 'plongeurs inscrits',
       icon: Users,
       color: 'text-[#0077b6]',
       bg: 'bg-blue-50',
     },
     {
-      label: 'Infractions médicales',
-      value: stats.expires,
-      icon: XCircle,
-      color: 'text-red-600',
-      bg: 'bg-red-50',
+      label: 'Sorties (30 jours)',
+      value: stats.prochainsSorties,
+      sub: 'événements à venir',
+      icon: Waves,
+      color: 'text-[#2a9d8f]',
+      bg: 'bg-teal-50',
     },
     {
-      label: 'Expire dans 30j',
+      label: 'Expire bientôt',
       value: stats.expirantBientot,
+      sub: 'certificats médicaux',
       icon: AlertTriangle,
       color: 'text-orange-600',
       bg: 'bg-orange-50',
     },
     {
-      label: 'Sorties (30 jours)',
-      value: stats.prochainsSorties,
-      icon: Waves,
-      color: 'text-[#2a9d8f]',
-      bg: 'bg-teal-50',
+      label: 'Non conformes',
+      value: stats.expires,
+      sub: 'certificats expirés',
+      icon: XCircle,
+      color: 'text-red-600',
+      bg: 'bg-red-50',
     },
   ]
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map(({ label, value, icon: Icon, color, bg }) => (
+      {cards.map(({ label, value, sub, icon: Icon, color, bg }) => (
         <Card key={label}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 font-medium">{label}</p>
-                <p className={`text-2xl font-bold mt-1 ${color}`}>
+          <CardContent className="p-5">
+            <div className="flex items-start gap-4">
+              <div className={`${bg} w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0`}>
+                <Icon className={`h-5 w-5 ${color}`} />
+              </div>
+              <div className="min-w-0">
+                <p className={`text-3xl font-extrabold leading-none ${color}`}>
                   {loading ? '—' : value}
                 </p>
-              </div>
-              <div className={`${bg} p-2.5 rounded-lg`}>
-                <Icon className={`h-5 w-5 ${color}`} />
+                <p className="text-sm font-semibold text-gray-700 mt-1 leading-tight">{label}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
               </div>
             </div>
           </CardContent>
