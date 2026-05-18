@@ -26,6 +26,9 @@ export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   formation: 'Formation',
   reunion: 'Réunion',
   competition: 'Compétition',
+  social: 'Événement social',
+  voyage: 'Voyage',
+  ferie: 'Jour férié',
   autre: 'Autre',
 }
 
@@ -37,6 +40,9 @@ export const EVENT_TYPE_COLORS: Record<EventType, string> = {
   formation: '#2a9d8f',
   reunion: '#6b7280',
   competition: '#7c3aed',
+  social: '#f97316',
+  voyage: '#8b5cf6',
+  ferie: '#d1d5db',
   autre: '#6b7280',
 }
 

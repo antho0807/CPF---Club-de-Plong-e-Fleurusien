@@ -25,6 +25,9 @@ export type EventType =
   | 'formation'
   | 'reunion'
   | 'competition'
+  | 'social'
+  | 'voyage'
+  | 'ferie'
   | 'autre'
 
 export type SiteType = 'piscine' | 'mer' | 'lac' | 'carriere' | 'fosse'

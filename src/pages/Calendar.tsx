@@ -13,6 +13,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css'
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEvents } from '../hooks/useEvents'
 import { useAuth } from '../hooks/useAuth'
+import { useBirthdays } from '../hooks/useBirthdays'
 import { EVENT_TYPE_COLORS, EVENT_TYPE_LABELS } from '../lib/utils'
 import { Button } from '../components/ui/button'
 import { EventModal } from '../components/events/EventModal'
@@ -93,7 +94,8 @@ function CalendarToolbar({ label, onNavigate, onView, view }: ToolbarProps) {
 
 export function Calendar() {
   const { events, loading, createEvent } = useEvents()
-  const { canCreateEvents, profile } = useAuth()
+  const { canCreateEvents, profile, isAdmin } = useAuth()
+  const birthdays = useBirthdays(isAdmin, profile?.id)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
 
   // Toujours utiliser l'événement en direct depuis le tableau pour avoir les inscriptions à jour
@@ -168,6 +170,21 @@ export function Calendar() {
 
   const eventPropGetter = useCallback((rbc: RBCEvent) => {
     const e = rbc.resource as Event
+    if (e.event_type === 'ferie') {
+      return {
+        style: {
+          backgroundColor: '#e5e7eb',
+          color: '#9ca3af',
+          borderRadius: '3px',
+          border: 'none',
+          fontSize: '0.65rem',
+          fontWeight: '400',
+          padding: '1px 4px',
+          cursor: 'default',
+          pointerEvents: 'none' as const,
+        },
+      }
+    }
     const color = EVENT_TYPE_COLORS[e.event_type]
     return {
       style: {
@@ -182,6 +199,29 @@ export function Calendar() {
       },
     }
   }, [])
+
+  // Fond grisé léger sur les jours fériés
+  const dayPropGetter = useCallback((date: Date) => {
+    const iso = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+    const isHoliday = events.some(e => e.event_type === 'ferie' && e.date_start.slice(0,10) === iso)
+    return isHoliday ? { style: { backgroundColor: '#f9fafb' } } : {}
+  }, [events])
+
+  // Composant date header avec indicateur anniversaire 🎂
+  const DateHeaderComponent = useCallback(({ date, label, onDrillDown }: { date: Date; label: string; onDrillDown: (e: React.SyntheticEvent) => void }) => {
+    const dayBdays = birthdays.filter(b => b.day === date.getDate() && b.month === date.getMonth() + 1)
+    return (
+      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+        <button onClick={onDrillDown} className="rbc-button-link">{label}</button>
+        {dayBdays.length > 0 && (
+          <span
+            style={{ width: 6, height: 6, borderRadius: '50%', background: '#ec4899', flexShrink: 0, cursor: 'default' }}
+            title={dayBdays.map(b => `🎂 ${b.name}`).join(' · ')}
+          />
+        )}
+      </span>
+    )
+  }, [birthdays])
 
   if (!profile) {
     return (
@@ -234,16 +274,17 @@ export function Calendar() {
             onView={setCalView}
             views={['month', 'week', 'agenda']}
             eventPropGetter={eventPropGetter}
+            dayPropGetter={dayPropGetter}
+            components={{ toolbar: CalendarToolbar, month: { dateHeader: DateHeaderComponent } }}
             onSelectEvent={(rbc) => {
-              const id = (rbc.resource as Event).id
-              // Pour les occurrences récurrentes, id = "uuid_date" → on ouvre l'événement de base
-              const baseId = id.length > 36 ? id.substring(0, 36) : id
+              const e = rbc.resource as Event
+              if (e.event_type === 'ferie') return // jours fériés non cliquables
+              const baseId = e.id.length > 36 ? e.id.substring(0, 36) : e.id
               setSelectedEventId(baseId)
             }}
             onSelectSlot={handleSelectSlot}
             selectable
             style={{ height: calView === 'agenda' ? undefined : 600 }}
-            components={{ toolbar: CalendarToolbar }}
             popup
           />
         )}
