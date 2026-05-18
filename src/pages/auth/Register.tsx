@@ -12,6 +12,7 @@ import { Label } from '../../components/ui/label'
 const schema = z.object({
   fullName: z.string().min(2, 'Nom requis'),
   email: z.string().email('Email invalide'),
+  dateNaissance: z.string().optional(),
   password: z.string().min(8, 'Minimum 8 caractères'),
   confirmPassword: z.string(),
 }).refine((d) => d.password === d.confirmPassword, {
@@ -33,10 +34,16 @@ export function Register() {
 
   async function onSubmit(data: FormData) {
     setError(null)
-    const { error } = await signUp(data.email, data.password, data.fullName)
+    const { data: authData, error } = await signUp(data.email, data.password, data.fullName)
     if (error) {
       setError(error.message)
     } else {
+      // Sauvegarder la date de naissance si fournie (le profil est créé par le trigger SQL)
+      if (data.dateNaissance && authData?.user?.id) {
+        await import('../../lib/supabase').then(({ supabase }) =>
+          supabase.from('profiles').update({ date_naissance: data.dateNaissance }).eq('id', authData.user!.id)
+        )
+      }
       setSuccess(true)
     }
   }
@@ -84,6 +91,13 @@ export function Register() {
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" className="mt-1" placeholder="votre@email.com" {...register('email')} />
               {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="dateNaissance">
+                Date de naissance <span className="text-gray-400 text-xs">(optionnel — affichée dans le calendrier du club 🎂)</span>
+              </Label>
+              <Input id="dateNaissance" type="date" className="mt-1" {...register('dateNaissance')} />
             </div>
 
             <div>

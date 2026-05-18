@@ -8,21 +8,18 @@ export interface Birthday {
   userId: string
 }
 
-export function useBirthdays(isAdmin: boolean, currentUserId: string | undefined) {
+// Tous les membres voient tous les anniversaires (esprit club)
+export function useBirthdays(currentUserId: string | undefined) {
   const [birthdays, setBirthdays] = useState<Birthday[]>([])
 
   useEffect(() => {
     if (!currentUserId) return
     async function load() {
-      let query = supabase
+      const { data } = await supabase
         .from('profiles')
         .select('id, full_name, alias, date_naissance')
         .not('date_naissance', 'is', null)
         .eq('is_active', true)
-
-      if (!isAdmin) query = query.eq('id', currentUserId)
-
-      const { data } = await query
       setBirthdays(
         (data ?? []).map((p) => {
           const d = new Date(p.date_naissance as string)
@@ -32,7 +29,7 @@ export function useBirthdays(isAdmin: boolean, currentUserId: string | undefined
       )
     }
     load()
-  }, [isAdmin, currentUserId])
+  }, [currentUserId])
 
   return birthdays
 }

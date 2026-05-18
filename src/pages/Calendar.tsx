@@ -95,7 +95,8 @@ function CalendarToolbar({ label, onNavigate, onView, view }: ToolbarProps) {
 export function Calendar() {
   const { events, loading, createEvent } = useEvents()
   const { canCreateEvents, profile, isAdmin } = useAuth()
-  const birthdays = useBirthdays(isAdmin, profile?.id)
+  const birthdays = useBirthdays(profile?.id)
+  const [birthdayPopup, setBirthdayPopup] = useState<{ names: string[]; label: string } | null>(null)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
 
   // Toujours utiliser l'événement en direct depuis le tableau pour avoir les inscriptions à jour
@@ -207,7 +208,7 @@ export function Calendar() {
     return isHoliday ? { style: { backgroundColor: '#f9fafb' } } : {}
   }, [events])
 
-  // Composant date header avec indicateur anniversaire 🎂
+  // Composant date header avec point rose anniversaire cliquable
   const DateHeaderComponent = useCallback(({ date, label, onDrillDown }: { date: Date; label: string; onDrillDown: (e: React.SyntheticEvent) => void }) => {
     const dayBdays = birthdays.filter(b => b.day === date.getDate() && b.month === date.getMonth() + 1)
     return (
@@ -215,8 +216,12 @@ export function Calendar() {
         <button onClick={onDrillDown} className="rbc-button-link">{label}</button>
         {dayBdays.length > 0 && (
           <span
-            style={{ width: 6, height: 6, borderRadius: '50%', background: '#ec4899', flexShrink: 0, cursor: 'default' }}
-            title={dayBdays.map(b => `🎂 ${b.name}`).join(' · ')}
+            onClick={(e) => {
+              e.stopPropagation()
+              setBirthdayPopup({ names: dayBdays.map(b => b.name), label })
+            }}
+            style={{ width: 8, height: 8, borderRadius: '50%', background: '#ec4899', flexShrink: 0, cursor: 'pointer', display: 'inline-block' }}
+            title="Voir les anniversaires"
           />
         )}
       </span>
@@ -295,6 +300,37 @@ export function Calendar() {
         open={!!selectedEvent}
         onClose={() => setSelectedEventId(null)}
       />
+
+      {/* Popup anniversaire */}
+      {birthdayPopup && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => setBirthdayPopup(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl px-8 py-6 text-center max-w-sm w-full border border-pink-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-4xl mb-3">🎂</div>
+            <p className="text-lg font-bold text-gray-900 mb-1">
+              {birthdayPopup.names.length === 1
+                ? `Bon anniversaire ${birthdayPopup.names[0]} !`
+                : `Anniversaires du ${birthdayPopup.label}`}
+            </p>
+            {birthdayPopup.names.length > 1 && (
+              <p className="text-gray-600 text-sm">
+                {birthdayPopup.names.join(' · ')}
+              </p>
+            )}
+            <button
+              onClick={() => setBirthdayPopup(null)}
+              className="mt-4 text-xs text-gray-400 hover:text-gray-600"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Message accès refusé */}
       {noAccessMsg && (
