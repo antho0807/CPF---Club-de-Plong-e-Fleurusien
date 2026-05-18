@@ -14,6 +14,9 @@ const BADGE_STYLES: Record<EventType, string> = {
   formation:            'bg-teal-50 text-teal-700 border-teal-100',
   reunion:              'bg-gray-50 text-gray-600 border-gray-100',
   competition:          'bg-purple-50 text-purple-700 border-purple-100',
+  social:               'bg-orange-50 text-orange-600 border-orange-100',
+  voyage:               'bg-violet-50 text-violet-700 border-violet-100',
+  ferie:                'bg-gray-50 text-gray-400 border-gray-100',
   autre:                'bg-gray-50 text-gray-600 border-gray-100',
 }
 

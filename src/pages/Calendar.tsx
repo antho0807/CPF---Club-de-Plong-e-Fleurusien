@@ -311,16 +311,17 @@ export function Calendar() {
 
       {/* ── Popup journée ── */}
       {dayPopup && (() => {
-        const isoDay = `${dayPopup.getFullYear()}-${String(dayPopup.getMonth()+1).padStart(2,'0')}-${String(dayPopup.getDate()).padStart(2,'0')}`
+        const d = dayPopup
+        const isoDay = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
         const dayEvents = expandedEvents.filter(e => e.date_start.slice(0,10) === isoDay)
-        const dayBdays = birthdays.filter(b => b.day === dayPopup.getDate() && b.month === dayPopup.getMonth()+1)
-        const dateLabel = dayPopup.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+        const dayBdays = birthdays.filter(b => b.day === d.getDate() && b.month === d.getMonth()+1)
+        const dateLabel = d.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
         function openCreate() {
-          const y = dayPopup.getFullYear()
-          const m = String(dayPopup.getMonth()+1).padStart(2,'0')
-          const d = String(dayPopup.getDate()).padStart(2,'0')
-          setPrefillDate(`${y}-${m}-${d}T09:00`)
+          const y = d.getFullYear()
+          const mo = String(d.getMonth()+1).padStart(2,'0')
+          const dy = String(d.getDate()).padStart(2,'0')
+          setPrefillDate(`${y}-${mo}-${dy}T09:00`)
           setShowForm(true)
           setDayPopup(null)
         }
