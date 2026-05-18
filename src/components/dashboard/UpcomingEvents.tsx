@@ -18,7 +18,7 @@ const BADGE_STYLES: Record<EventType, string> = {
 }
 
 export function UpcomingEvents() {
-  const { events, loading } = useUpcomingEvents(5)
+  const { events, loading } = useUpcomingEvents(3)
 
   return (
     <Card>
