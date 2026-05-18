@@ -55,6 +55,11 @@ RETURNS boolean AS $$
 $$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public;
 
 -- 7. Politiques ca_stock_products
+DROP POLICY IF EXISTS "ca_stocks_select" ON public.ca_stock_products;
+DROP POLICY IF EXISTS "ca_stocks_insert" ON public.ca_stock_products;
+DROP POLICY IF EXISTS "ca_stocks_update" ON public.ca_stock_products;
+DROP POLICY IF EXISTS "ca_stocks_delete" ON public.ca_stock_products;
+
 CREATE POLICY "ca_stocks_select" ON public.ca_stock_products FOR SELECT
   USING (is_ca_or_admin((SELECT auth.uid())));
 
@@ -68,6 +73,9 @@ CREATE POLICY "ca_stocks_delete" ON public.ca_stock_products FOR DELETE
   USING (get_user_role((SELECT auth.uid())) = 'admin');
 
 -- 8. Politiques ca_stock_movements
+DROP POLICY IF EXISTS "ca_movements_select" ON public.ca_stock_movements;
+DROP POLICY IF EXISTS "ca_movements_insert" ON public.ca_stock_movements;
+
 CREATE POLICY "ca_movements_select" ON public.ca_stock_movements FOR SELECT
   USING (is_ca_or_admin((SELECT auth.uid())));
 
@@ -78,6 +86,11 @@ CREATE POLICY "ca_movements_insert" ON public.ca_stock_movements FOR INSERT
   );
 
 -- 9. Politiques ca_treasury
+DROP POLICY IF EXISTS "ca_treasury_select" ON public.ca_treasury;
+DROP POLICY IF EXISTS "ca_treasury_insert" ON public.ca_treasury;
+DROP POLICY IF EXISTS "ca_treasury_update" ON public.ca_treasury;
+DROP POLICY IF EXISTS "ca_treasury_delete" ON public.ca_treasury;
+
 CREATE POLICY "ca_treasury_select" ON public.ca_treasury FOR SELECT
   USING (is_ca_or_admin((SELECT auth.uid())));
 
