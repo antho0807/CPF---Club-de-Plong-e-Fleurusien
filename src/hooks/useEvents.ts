@@ -11,6 +11,20 @@ function asEvents(data: unknown): Event[] {
   return (data ?? []) as Event[]
 }
 
+// Prénom + initiale du nom, ou alias, ex : "Tom A."
+function displayName(p: { alias?: string | null; full_name?: string | null } | null): string {
+  if (!p) return 'Un membre'
+  if (p.alias) return p.alias
+  if (!p.full_name) return 'Un membre'
+  const parts = p.full_name.trim().split(/\s+/)
+  return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0]
+}
+
+// "19 mai", "18 juin", etc.
+function shortDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long' })
+}
+
 export function useEvents() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -82,11 +96,12 @@ export function useEvents() {
 
     const event = events.find((e) => e.id === eventId)
     if (event?.organizer_id) {
+      const dateStr = event.date_start ? ` du ${shortDate(event.date_start)}` : ''
       await createNotification({
         userId: event.organizer_id,
         type: 'registration_pending',
-        title: 'Nouvelle demande d\'inscription',
-        body: `${memberName ?? 'Un membre'} souhaite s'inscrire à « ${event.title} ».`,
+        title: '📋 Nouvelle demande d\'inscription',
+        body: `${memberName ?? 'Un membre'} souhaite rejoindre « ${event.title} »${dateStr}.`,
         data: { eventId, memberId },
       })
     }
@@ -125,39 +140,37 @@ export function useEvents() {
 
     const event = events.find((e) => e.id === eventId)
     const eventTitle = event?.title ?? 'un événement'
+    const eventDateShort = event?.date_start ? ` du ${shortDate(event.date_start)}` : ''
+    const eventDateLong = event?.date_start
+      ? new Date(event.date_start).toLocaleDateString('fr-BE', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        })
+      : 'date à confirmer'
 
-    if (accept) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('email, full_name')
-        .eq('id', memberId)
-        .maybeSingle()
+    // Récupérer le profil du membre (nom + email)
+    const { data: memberProfile } = await supabase
+      .from('profiles')
+      .select('email, full_name, alias')
+      .eq('id', memberId)
+      .maybeSingle()
 
-      if (profile) {
-        const eventDate = event?.date_start
-          ? new Date(event.date_start).toLocaleDateString('fr-BE', {
-              weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-            })
-          : 'date à confirmer'
+    const memberDisplay = displayName(memberProfile)
 
-        const eventLocation = (event as unknown as { dive_sites?: { name?: string } })
-          ?.dive_sites?.name
-
-        // Envoi non-bloquant : l'inscription est confirmée même si l'email échoue
-        supabase.functions.invoke('send-confirmation-email', {
-          body: { to: profile.email, memberName: profile.full_name, eventTitle, eventDate, eventLocation },
-        }).catch(console.error)
-      }
+    if (accept && memberProfile) {
+      const eventLocation = (event as unknown as { dive_sites?: { name?: string } })?.dive_sites?.name
+      supabase.functions.invoke('send-confirmation-email', {
+        body: { to: memberProfile.email, memberName: memberProfile.full_name, eventTitle, eventDate: eventDateLong, eventLocation },
+      }).catch(console.error)
     }
 
     // Notifier le membre concerné
     await createNotification({
       userId: memberId,
       type: accept ? 'registration_confirmed' : 'registration_refused',
-      title: accept ? 'Inscription confirmée !' : 'Inscription refusée',
+      title: accept ? '✅ Inscription confirmée !' : '❌ Inscription refusée',
       body: accept
-        ? `Votre inscription à « ${eventTitle} » a été validée par l'organisateur.`
-        : `Votre inscription à « ${eventTitle} » a été refusée.`,
+        ? `Votre inscription à « ${eventTitle} »${eventDateShort} a été validée.`
+        : `Votre inscription à « ${eventTitle} »${eventDateShort} a été refusée.`,
       data: { eventId },
     })
 
@@ -175,7 +188,7 @@ export function useEvents() {
           userId: reg.member_id,
           type: 'registration_confirmed',
           title: '🤿 Nouveau participant',
-          body: `Un membre a rejoint « ${eventTitle} ».`,
+          body: `${memberDisplay} a rejoint « ${eventTitle} »${eventDateShort}.`,
           data: { eventId },
         })
       ))
@@ -321,19 +334,22 @@ export function useEventMessages(eventId: string | null) {
       content: content.trim(),
     })
 
-    // Récupérer le titre de l'événement et les participants confirmés
-    const [{ data: ev }, { data: regs }] = await Promise.all([
-      supabase.from('events').select('title').eq('id', eventId).single(),
+    // Récupérer l'événement, les participants confirmés et le profil de l'expéditeur
+    const [{ data: ev }, { data: regs }, { data: senderProfile }] = await Promise.all([
+      supabase.from('events').select('title, date_start').eq('id', eventId).single(),
       supabase.from('event_registrations').select('member_id').eq('event_id', eventId).eq('status', 'confirmed').neq('member_id', senderId),
+      supabase.from('profiles').select('alias, full_name').eq('id', senderId).single(),
     ])
 
     if (ev && regs?.length) {
+      const sender = displayName(senderProfile)
+      const dateStr = ev.date_start ? ` (${shortDate(ev.date_start)})` : ''
       await Promise.all(regs.map((reg) =>
         createNotification({
           userId: reg.member_id,
           type: 'new_message',
-          title: `💬 ${ev.title}`,
-          body: content.trim().slice(0, 80),
+          title: `💬 ${sender} — ${ev.title}${dateStr}`,
+          body: content.trim().slice(0, 100),
           data: { eventId },
         })
       ))
