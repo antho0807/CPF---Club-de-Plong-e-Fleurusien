@@ -12,5 +12,9 @@ CREATE POLICY "regs_select_confirmed_public"
   ON public.event_registrations FOR SELECT
   USING (
     status = 'confirmed'
-    AND is_approved((SELECT auth.uid()))
+    AND EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = (SELECT auth.uid())
+        AND status = 'approved'
+    )
   );
