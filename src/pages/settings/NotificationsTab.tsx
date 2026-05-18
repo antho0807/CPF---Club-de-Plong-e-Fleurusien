@@ -1,16 +1,91 @@
-import { Bell } from 'lucide-react'
+import { useState } from 'react'
+import { Bell, Send, CheckCircle, XCircle } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useNotifications } from '../../hooks/useNotifications'
 import { useNotificationPreferences, NOTIF_PREF_LABELS, type NotifPrefKey } from '../../hooks/useNotificationPreferences'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
+import { supabase } from '../../lib/supabase'
 import { formatDate } from '../../lib/utils'
+import { Button } from '../../components/ui/button'
 
 export function NotificationsTab() {
   const { profile } = useAuth()
   const { notifications, unreadCount, markAllRead } = useNotifications(profile?.id)
   const { prefs, loading, saving, updatePref } = useNotificationPreferences(profile?.id)
+  const { supported, subscribed, loading: pushLoading, toggle } = usePushNotifications(profile?.id ?? null)
+  const [testState, setTestState] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle')
+  const [testError, setTestError] = useState<string | null>(null)
+
+  async function sendTestPush() {
+    if (!profile?.id) return
+    setTestState('sending')
+    setTestError(null)
+    try {
+      const { error } = await supabase.functions.invoke('send-push-notification', {
+        body: {
+          user_ids: [profile.id],
+          title: '🔔 Test CPF Plongée',
+          body: 'Les notifications push fonctionnent correctement !',
+          url: '/parametres',
+        },
+      })
+      if (error) throw new Error(error.message)
+      setTestState('ok')
+      setTimeout(() => setTestState('idle'), 4000)
+    } catch (e) {
+      setTestError(e instanceof Error ? e.message : String(e))
+      setTestState('error')
+    }
+  }
 
   return (
     <div className="space-y-8">
+      {/* Statut abonnement push */}
+      <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-sm font-semibold text-gray-800">Notifications push sur cet appareil</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {!supported
+              ? 'Non supportées par ce navigateur'
+              : subscribed
+              ? 'Activées — vous recevez les notifications'
+              : 'Désactivées — cliquez pour les activer'}
+          </p>
+        </div>
+        {supported && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {subscribed && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={testState === 'sending'}
+                onClick={sendTestPush}
+                className="gap-2 text-xs"
+              >
+                <Send className="h-3.5 w-3.5" />
+                {testState === 'sending' ? 'Envoi…' : 'Tester'}
+              </Button>
+            )}
+            <Button size="sm" variant={subscribed ? 'outline' : 'default'} disabled={pushLoading} onClick={toggle} className="text-xs">
+              {pushLoading ? '…' : subscribed ? 'Désactiver' : 'Activer'}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {testState === 'ok' && (
+        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-100 rounded-lg px-4 py-2.5">
+          <CheckCircle className="h-4 w-4 flex-shrink-0" />
+          Push envoyé ! Vous devriez recevoir la notification dans quelques secondes.
+        </div>
+      )}
+      {testState === 'error' && (
+        <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-4 py-2.5">
+          <XCircle className="h-4 w-4 flex-shrink-0" />
+          {testError ?? 'Erreur lors de l\'envoi. Vérifiez les clés VAPID dans Supabase.'}
+        </div>
+      )}
+
       {/* Préférences push */}
       <div>
         <h2 className="text-sm font-semibold text-gray-700 mb-1">Notifications push</h2>
