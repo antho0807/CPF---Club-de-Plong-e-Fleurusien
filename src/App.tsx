@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { Layout } from './components/layout/Layout'
@@ -37,18 +37,25 @@ function Spinner() {
 // Accès complet : connecté + approuvé (+ admin si requireAdmin)
 function ProtectedRoute({ children, requireAdmin = false }: { children: React.ReactNode; requireAdmin?: boolean }) {
   const { user, profile, loading, signOut } = useAuth()
+  const [grace, setGrace] = useState(true)
 
-  // Si l'utilisateur est authentifié mais que le profil est introuvable après chargement
-  // (DB non initialisée, trigger manquant…), on déconnecte pour éviter la boucle infinie.
+  // Délai de grâce : on attend 4s avant de signOut si le profil n'est pas chargé
+  // (évite les déconnexions intempestives sur chargement lent ou erreur réseau)
   useEffect(() => {
     if (!loading && user && !profile) {
-      signOut()
+      const t = setTimeout(() => { setGrace(false) }, 4000)
+      return () => clearTimeout(t)
     }
-  }, [loading, user, profile, signOut])
+    setGrace(true)
+  }, [loading, user, profile])
 
-  if (loading) return <Spinner />
+  useEffect(() => {
+    if (!grace && !loading && user && !profile) signOut()
+  }, [grace, loading, user, profile, signOut])
+
+  if (loading || (user && !profile && grace)) return <Spinner />
   if (!user) return <Navigate to="/login" replace />
-  if (!profile) return <Spinner /> // Bref — signOut en cours dans le useEffect
+  if (!profile) return <Spinner />
 
   if (profile.status === 'pending') return <Navigate to="/pending-approbation" replace />
   if (profile.status === 'rejected') return <Navigate to="/refus" replace />

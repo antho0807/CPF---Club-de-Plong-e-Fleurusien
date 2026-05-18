@@ -10,34 +10,27 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   const fetchProfile = useCallback(async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (error) {
-        console.error('[fetchProfile] erreur Supabase:', error.code, error.message)
-        // PGRST116 = aucun résultat → trigger peut être lent, on retente une fois
-        if (error.code === 'PGRST116') {
-          await new Promise((r) => setTimeout(r, 800))
-          const { data: retryData, error: retryError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single()
-          if (retryError) console.error('[fetchProfile] retry erreur:', retryError.code, retryError.message)
-          setProfile((retryData ?? null) as Profile | null)
+    // 3 tentatives avec délai croissant avant d'abandonner
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        if (attempt > 0) await new Promise((r) => setTimeout(r, attempt * 800))
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+        if (!error && data) {
+          setProfile(data as Profile | null)
+          setLoading(false)
+          return
         }
-      } else {
-        setProfile(data as Profile | null)
+        console.warn(`[fetchProfile] tentative ${attempt + 1}/3 — code: ${error?.code} ${error?.message}`)
+      } catch (e) {
+        console.warn(`[fetchProfile] tentative ${attempt + 1}/3 — exception`, e)
       }
-    } catch {
-      // Erreur réseau imprévue — profile reste null
-    } finally {
-      setLoading(false)
     }
+    // Après 3 échecs : loading false, profile reste null → ProtectedRoute gère
+    setLoading(false)
   }, [])
 
   useEffect(() => {
