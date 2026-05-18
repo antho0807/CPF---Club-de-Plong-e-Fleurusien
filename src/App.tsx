@@ -20,6 +20,7 @@ import { GdprConsent } from './components/GdprConsent'
 import { PendingApproval } from './pages/PendingApproval'
 import { Rejected } from './pages/Rejected'
 import { AdminPending } from './pages/admin/AdminPending'
+import { CA } from './pages/CA'
 
 function Spinner() {
   return (
@@ -105,6 +106,7 @@ export default function App() {
           <Route path="objectifs" element={<Objectives />} />
           <Route path="utile" element={<Useful />} />
           <Route path="profil" element={<Profile />} />
+          <Route path="ca" element={<CA />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

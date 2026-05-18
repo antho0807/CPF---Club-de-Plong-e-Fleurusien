@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Calendar, MapPin, Info, LogOut, User, Bell,
-  ShieldCheck, Target, Lightbulb,
+  ShieldCheck, Target, Lightbulb, Briefcase,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useNotifications } from '../../hooks/useNotifications'
@@ -20,7 +20,7 @@ const navItems = [
 interface NavbarProps { onClose?: () => void }
 
 export function Navbar({ onClose }: NavbarProps = {}) {
-  const { profile, signOut, isAdmin } = useAuth()
+  const { profile, signOut, isAdmin, isCA } = useAuth()
   const { notifications, unreadCount, markAllRead } = useNotifications(profile?.id)
   const [showNotifs, setShowNotifs] = useState(false)
   const location = useLocation()
@@ -59,21 +59,37 @@ export function Navbar({ onClose }: NavbarProps = {}) {
         })}
       </nav>
 
-      {/* Admin */}
-      {isAdmin && (
-        <div className="px-3 pb-2 border-t border-white/20 pt-2">
-          <Link
-            to="/admin/approbations"
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-              location.pathname === '/admin/approbations'
-                ? 'bg-white text-[#0077b6]'
-                : 'text-blue-100 hover:bg-white/10',
-            )}
-          >
-            <ShieldCheck className="h-5 w-5 flex-shrink-0" />
-            Approbations
-          </Link>
+      {/* CA + Admin */}
+      {(isCA || isAdmin) && (
+        <div className="px-3 pb-2 border-t border-white/20 pt-2 space-y-1">
+          {isCA && (
+            <Link
+              to="/ca"
+              onClick={onClose}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                location.pathname === '/ca' ? 'bg-white text-[#0077b6]' : 'text-blue-100 hover:bg-white/10',
+              )}
+            >
+              <Briefcase className="h-5 w-5 flex-shrink-0" />
+              Espace CA
+            </Link>
+          )}
+          {isAdmin && (
+            <Link
+              to="/admin/approbations"
+              onClick={onClose}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                location.pathname === '/admin/approbations'
+                  ? 'bg-white text-[#0077b6]'
+                  : 'text-blue-100 hover:bg-white/10',
+              )}
+            >
+              <ShieldCheck className="h-5 w-5 flex-shrink-0" />
+              Approbations
+            </Link>
+          )}
         </div>
       )}
 

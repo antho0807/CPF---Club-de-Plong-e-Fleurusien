@@ -109,6 +109,7 @@ export function useAuth() {
   const isApproved = profile?.status === 'approved'
   const isPending = profile?.status === 'pending'
   const isRejected = profile?.status === 'rejected'
+  const isCA = profile?.is_ca === true || isAdmin
   // Peut créer des événements : admin/moniteur OU brevet P3★+
   const canCreateEvents = profile ? canCreateAnyEvent(profile.role, profile.brevet_level) : false
 
@@ -122,6 +123,7 @@ export function useAuth() {
     isApproved,
     isPending,
     isRejected,
+    isCA,
     canCreateEvents,
     signIn,
     signUp,

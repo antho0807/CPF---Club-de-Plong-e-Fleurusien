@@ -9,6 +9,9 @@ export type BrevetLevel =
   | 'instructeur'
 
 export type UserRole = 'admin' | 'moniteur' | 'membre'
+export type StockCategory = 'boisson' | 'snack' | 'autre'
+export type StockReason = 'achat' | 'vente' | 'perte' | 'ajustement'
+export type TreasuryCategory = 'buvette' | 'cotisation' | 'achat_stock' | 'evenement' | 'autre'
 
 export type AccountStatus = 'pending' | 'approved' | 'rejected'
 
@@ -52,6 +55,7 @@ export interface Profile {
   emergency_contact_phone: string | null
   emergency_contact_relation: string | null
   is_active: boolean
+  is_ca: boolean
   notes: string | null
   created_at: string
 }
@@ -188,6 +192,41 @@ export interface CAMember {
   email: string | null
   phone: string | null
   order_index: number
+}
+
+export interface CAStockProduct {
+  id: string
+  name: string
+  category: StockCategory
+  price: number
+  quantity_current: number
+  quantity_threshold: number
+  unit: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface CAStockMovement {
+  id: string
+  product_id: string
+  quantity_change: number
+  reason: StockReason
+  note: string | null
+  created_by: string | null
+  created_at: string
+  ca_stock_products?: Pick<CAStockProduct, 'name' | 'unit'>
+  profiles?: Pick<Profile, 'full_name' | 'alias'>
+}
+
+export interface CATreasury {
+  id: string
+  amount: number
+  category: TreasuryCategory
+  description: string
+  date: string
+  created_by: string | null
+  created_at: string
+  profiles?: Pick<Profile, 'full_name' | 'alias'>
 }
 
 export type MedicalStatus = 'valid' | 'expiring_soon' | 'expired' | 'missing'

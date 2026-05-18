@@ -34,6 +34,7 @@ export interface Database {
           status: 'pending' | 'approved' | 'rejected'
           alias: string | null
           is_active: boolean
+          is_ca: boolean
           notes: string | null
           created_at: string
         }
@@ -58,6 +59,7 @@ export interface Database {
           status?: 'pending' | 'approved' | 'rejected'
           alias?: string | null
           is_active?: boolean
+          is_ca?: boolean
           notes?: string | null
           created_at?: string
         }
@@ -82,7 +84,91 @@ export interface Database {
           status?: 'pending' | 'approved' | 'rejected'
           alias?: string | null
           is_active?: boolean
+          is_ca?: boolean
           notes?: string | null
+        }
+        Relationships: []
+      }
+      ca_stock_products: {
+        Row: {
+          id: string
+          name: string
+          category: 'boisson' | 'snack' | 'autre'
+          price: number
+          quantity_current: number
+          quantity_threshold: number
+          unit: string
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          category: 'boisson' | 'snack' | 'autre'
+          price?: number
+          quantity_current?: number
+          quantity_threshold?: number
+          unit?: string
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          name?: string
+          category?: 'boisson' | 'snack' | 'autre'
+          price?: number
+          quantity_current?: number
+          quantity_threshold?: number
+          unit?: string
+          is_active?: boolean
+        }
+        Relationships: []
+      }
+      ca_stock_movements: {
+        Row: {
+          id: string
+          product_id: string
+          quantity_change: number
+          reason: 'achat' | 'vente' | 'perte' | 'ajustement'
+          note: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          quantity_change: number
+          reason: 'achat' | 'vente' | 'perte' | 'ajustement'
+          note?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: Record<string, never>
+        Relationships: []
+      }
+      ca_treasury: {
+        Row: {
+          id: string
+          amount: number
+          category: 'buvette' | 'cotisation' | 'achat_stock' | 'evenement' | 'autre'
+          description: string
+          date: string
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          amount: number
+          category: 'buvette' | 'cotisation' | 'achat_stock' | 'evenement' | 'autre'
+          description: string
+          date?: string
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: 'buvette' | 'cotisation' | 'achat_stock' | 'evenement' | 'autre'
+          description?: string
+          date?: string
         }
         Relationships: []
       }

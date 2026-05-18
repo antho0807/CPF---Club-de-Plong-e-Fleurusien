@@ -123,6 +123,18 @@ export function MemberProfile() {
             <Edit2 className="h-4 w-4" /> Modifier
           </Button>
         )}
+        {isAdmin && (
+          <Button
+            variant="outline"
+            size="sm"
+            className={`gap-2 text-xs ${member.is_ca ? 'text-amber-700 border-amber-300 hover:bg-amber-50' : 'text-gray-600'}`}
+            onClick={async () => {
+              await updateMember(member.id, { is_ca: !member.is_ca })
+            }}
+          >
+            {member.is_ca ? '🏛 Retirer du CA' : '🏛 Ajouter au CA'}
+          </Button>
+        )}
         {isAdmin && member.is_active && (
           <Button
             variant="destructive"
@@ -150,6 +162,9 @@ export function MemberProfile() {
                 <h1 className="text-xl font-bold text-gray-900">{member.full_name}</h1>
                 {!member.is_active && <Badge variant="secondary">Inactif</Badge>}
                 <Badge variant="outline" className="capitalize">{member.role}</Badge>
+                {member.is_ca && (
+                  <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs">CA</Badge>
+                )}
               </div>
               <div className="mt-2 space-y-1">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
