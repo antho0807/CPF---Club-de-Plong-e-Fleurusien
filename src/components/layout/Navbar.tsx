@@ -22,7 +22,7 @@ export function Navbar({ onClose }: NavbarProps = {}) {
   const location = useLocation()
 
   return (
-    <aside className="flex flex-col w-64 min-h-[100dvh] text-white" style={{ background: 'linear-gradient(180deg, #0077b6 0%, #023e8a 100%)' }}>
+    <aside className="flex flex-col w-64 min-h-[100dvh] bg-[#0077b6] text-white">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-white/20">
         <div className="bg-white rounded-full p-1 flex-shrink-0">

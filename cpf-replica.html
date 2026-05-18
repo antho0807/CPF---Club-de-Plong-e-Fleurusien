@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CPF — Club de Plongée Fleurusien</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:       #0077b6;
+      --blue-dark:  #023e8a;
+      --blue-mid:   #005f8e;
+      --sidebar-w:  256px;
+      --gray-bg:    #f1f5f9;
+      --card:       #ffffff;
+      --border:     #e2e8f0;
+      --text:       #0f172a;
+      --muted:      #64748b;
+      --success:    #2a9d8f;
+      --warning:    #f4a261;
+      --danger:     #e63946;
+    }
+
+    html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; background: var(--gray-bg); color: var(--text); }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, var(--blue) 0%, var(--blue-dark) 100%);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      overflow-y: auto;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .logo-text p:first-child { font-weight: 700; font-size: 14px; color: white; line-height: 1.2; }
+    .logo-text p:last-child  { font-size: 11px; color: rgba(255,255,255,0.65); line-height: 1.3; }
+
+    .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: rgba(255,255,255,0.8);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+
+    .nav-item.active {
+      background: white;
+      color: var(--blue);
+      font-weight: 600;
+    }
+
+    .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .nav-badge {
+      margin-left: auto;
+      background: #f97316;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .sidebar-section {
+      padding: 0 12px 8px;
+      border-top: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .sidebar-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 12px 12px 4px;
+    }
+
+    .sidebar-user {
+      padding: 12px;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      flex-shrink: 0;
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .user-row:hover { background: rgba(255,255,255,0.1); }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .user-info p:first-child { font-size: 13px; font-weight: 600; color: white; }
+    .user-info p:last-child  { font-size: 11px; color: rgba(255,255,255,0.55); }
+
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      color: rgba(255,255,255,0.6);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      margin-top: 2px;
+    }
+
+    .logout-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+    .logout-btn svg { width: 18px; height: 18px; }
+
+    /* ── MAIN ── */
+    .main {
+      margin-left: var(--sidebar-w);
+      min-height: 100vh;
+      padding: 28px 32px;
+      max-width: calc(100vw - var(--sidebar-w));
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header { margin-bottom: 24px; }
+    .page-header h1 { font-size: 26px; font-weight: 800; color: var(--text); }
+    .page-header p  { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+    /* ── GRID ── */
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+    .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+
+    /* ── STAT CARD ── */
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .stat-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+
+    .stat-icon.blue   { background: #dbeafe; }
+    .stat-icon.green  { background: #d1fae5; }
+    .stat-icon.orange { background: #ffedd5; }
+
+    .stat-value { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; }
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .stat-sub   { font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .stat-sub span { color: var(--success); font-weight: 600; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .card-body  { padding: 16px 20px; }
+
+    /* ── EVENT ITEM ── */
+    .event-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .event-item:last-child { border-bottom: none; }
+
+    .event-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .event-info { flex: 1; min-width: 0; }
+    .event-title { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .event-meta  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .event-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .badge-mer     { background: #dbeafe; color: #1d4ed8; }
+    .badge-piscine { background: #d1fae5; color: #065f46; }
+    .badge-lac     { background: #e0f2fe; color: #0369a1; }
+    .badge-reunion { background: #fef3c7; color: #92400e; }
+
+    /* ── COMPLIANCE ── */
+    .compliance-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compliance-row:last-child { border-bottom: none; }
+    .compliance-label { font-size: 13px; color: var(--muted); }
+    .compliance-status { font-size: 12px; font-weight: 600; }
+    .status-ok      { color: var(--success); }
+    .status-warn    { color: var(--warning); }
+    .status-danger  { color: var(--danger); }
+
+    /* ── MEMBER LIST ── */
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .member-row:last-child { border-bottom: none; }
+
+    .member-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .member-name  { font-size: 14px; font-weight: 600; color: var(--text); }
+    .member-brevet{ font-size: 11px; color: var(--muted); }
+
+    .brevet-badge {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    /* ── BUTTON ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-primary:hover { background: var(--blue-mid); }
+    .btn-outline { background: white; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { background: var(--gray-bg); }
+    .btn svg { width: 15px; height: 15px; }
+
+    /* ── PROGRESS BAR ── */
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--blue), #00b4d8);
+    }
+
+    /* ── MOBILE OVERLAY (sidebar toggle) ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 80px 16px 24px; max-width: 100vw; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .mobile-header { display: flex; }
+    }
+
+    .mobile-header {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      background: var(--blue);
+      align-items: center;
+      padding: 0 16px;
+      z-index: 99;
+      gap: 12px;
+    }
+
+    .hamburger {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+    }
+
+    .mobile-title { font-size: 16px; font-weight: 700; color: white; }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 99;
+    }
+
+    .overlay.show { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- Mobile header -->
+<div class="mobile-header">
+  <button class="hamburger" onclick="toggleSidebar()">
+    <svg fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24" width="20" height="20">
+      <path d="M3 12h18M3 6h18M3 18h18"/>
+    </svg>
+  </button>
+  <span class="mobile-title">CPF Plongée</span>
+</div>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <div class="logo-icon">🤿</div>
+    <div class="logo-text">
+      <p>CPF</p>
+      <p>Club de Plongée Fleurusien</p>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="sidebar-nav">
+    <a class="nav-item active" onclick="setActive(this, 'dashboard')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Tableau de bord
+    </a>
+    <a class="nav-item" onclick="setActive(this, 'calendar')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Calendrier
+    </a>
+    <a class="nav-item" onclick="setActive(this, 'objectifs')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      Objectifs
+    </a>
+    <a class="nav-item" onclick="setActive(this, 'sites')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Sites
+    </a>
+    <a class="nav-item" onclick="setActive(this, 'utile')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      Utile
+    </a>
+    <a class="nav-item" onclick="setActive(this, 'club')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+      Le Club
+    </a>
+
+    <!-- Séparateur CA/Admin -->
+    <div class="sidebar-section-label">Espace privé</div>
+
+    <a class="nav-item" onclick="setActive(this, 'ca')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      Espace CA
+    </a>
+
+    <a class="nav-item" onclick="setActive(this, 'settings')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Paramètres
+    </a>
+
+    <a class="nav-item" onclick="setActive(this, 'admin')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Approbations
+    </a>
+  </nav>
+
+  <!-- User -->
+  <div class="sidebar-user">
+    <div class="user-row">
+      <div class="avatar">AC</div>
+      <div class="user-info">
+        <p>Anthony C.</p>
+        <p>admin</p>
+      </div>
+    </div>
+    <div class="logout-btn">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Déconnexion
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main" id="main">
+
+  <!-- Dashboard -->
+  <div id="view-dashboard">
+
+    <div class="page-header">
+      <h1>Bonjour Anthony 👋</h1>
+      <p>CPF — Club de Plongée Fleurusien · LIFRAS/CMAS</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid-3">
+      <div class="stat-card">
+        <div class="stat-icon blue">👥</div>
+        <div>
+          <div class="stat-value">24</div>
+          <div class="stat-label">Membres actifs</div>
+          <div class="stat-sub"><span>+3</span> ce mois</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">📅</div>
+        <div>
+          <div class="stat-value">8</div>
+          <div class="stat-label">Événements à venir</div>
+          <div class="stat-sub">Prochain : <span>mardi</span></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon orange">⚠️</div>
+        <div>
+          <div class="stat-value">3</div>
+          <div class="stat-label">En attente d'approbation</div>
+          <div class="stat-sub">Nouveaux membres</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content grid -->
+    <div class="grid-2">
+
+      <!-- Left: Events + Members -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- Actions rapides -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">⚡ Actions rapides</span>
+          </div>
+          <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-primary">
+              <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              Créer un événement
+            </button>
+            <button class="btn btn-outline">
+              <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              Ajouter un membre
+            </button>
+            <button class="btn btn-outline">
+              <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              Ajouter un site
+            </button>
+          </div>
+        </div>
+
+        <!-- Upcoming events -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📅 Prochains événements</span>
+            <button class="btn btn-outline" style="padding:5px 12px;font-size:12px;">Voir tout</button>
+          </div>
+          <div class="card-body">
+            <div class="event-item">
+              <div class="event-dot" style="background:#0077b6;"></div>
+              <div class="event-info">
+                <div class="event-title">🏊 Entraînement piscine</div>
+                <div class="event-meta">Mardi 20 mai · 20h00 → 21h30 · Piscine de Fleurus</div>
+              </div>
+              <span class="event-badge badge-piscine">Piscine</span>
+            </div>
+            <div class="event-item">
+              <div class="event-dot" style="background:#00b4d8;"></div>
+              <div class="event-info">
+                <div class="event-title">Sortie carrière de Golzinne</div>
+                <div class="event-meta">Dimanche 25 mai · 09h00 · 12 inscrits / 15 places</div>
+              </div>
+              <span class="event-badge badge-lac">Carrière</span>
+            </div>
+            <div class="event-item">
+              <div class="event-dot" style="background:#0077b6;"></div>
+              <div class="event-info">
+                <div class="event-title">🏊 Entraînement piscine</div>
+                <div class="event-meta">Mardi 27 mai · 20h00 → 21h30 · Piscine de Fleurus</div>
+              </div>
+              <span class="event-badge badge-piscine">Piscine</span>
+            </div>
+            <div class="event-item">
+              <div class="event-dot" style="background:#e63946;"></div>
+              <div class="event-info">
+                <div class="event-title">Sortie mer Zélande</div>
+                <div class="event-meta">Samedi 31 mai · 08h00 · 8 inscrits / 12 places</div>
+              </div>
+              <span class="event-badge badge-mer">Mer</span>
+            </div>
+            <div class="event-item">
+              <div class="event-dot" style="background:#f4a261;"></div>
+              <div class="event-info">
+                <div class="event-title">Réunion CA mensuelle</div>
+                <div class="event-meta">Lundi 2 juin · 19h30 · Local du club</div>
+              </div>
+              <span class="event-badge badge-reunion">Réunion</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Membres récents -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">👤 Membres récents</span>
+            <button class="btn btn-outline" style="padding:5px 12px;font-size:12px;">Tous les membres</button>
+          </div>
+          <div class="card-body">
+            <div class="member-row">
+              <div class="member-avatar">JD</div>
+              <div>
+                <div class="member-name">Julie Dumont</div>
+                <div class="member-brevet">julie.dumont@email.be · LIFRAS #4521</div>
+              </div>
+              <span class="brevet-badge">2★</span>
+            </div>
+            <div class="member-row">
+              <div class="member-avatar">MR</div>
+              <div>
+                <div class="member-name">Marc Renard</div>
+                <div class="member-brevet">marc.renard@email.be · LIFRAS #3897</div>
+              </div>
+              <span class="brevet-badge">3★</span>
+            </div>
+            <div class="member-row">
+              <div class="member-avatar">SL</div>
+              <div>
+                <div class="member-name">Sophie Lambert</div>
+                <div class="member-brevet">sophie.lambert@email.be</div>
+              </div>
+              <span class="brevet-badge">1★</span>
+            </div>
+            <div class="member-row">
+              <div class="member-avatar">TP</div>
+              <div>
+                <div class="member-name">Tom Pierard</div>
+                <div class="member-brevet">tom.pierard@email.be · LIFRAS #5102</div>
+              </div>
+              <span class="brevet-badge">4★</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Compliance + Progress -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- Conformité médicale -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🩺 Conformité médicale</span>
+          </div>
+          <div class="card-body">
+            <div style="text-align:center;margin-bottom:16px;">
+              <div style="font-size:36px;font-weight:800;color:var(--blue)">21</div>
+              <div style="font-size:13px;color:var(--muted)">membres à jour sur 24</div>
+              <div class="progress-bar" style="margin-top:12px;">
+                <div class="progress-fill" style="width:87.5%"></div>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:6px;">87.5% de conformité</div>
+            </div>
+            <div class="compliance-row">
+              <span class="compliance-label">✅ Certificats valides</span>
+              <span class="compliance-status status-ok">21 membres</span>
+            </div>
+            <div class="compliance-row">
+              <span class="compliance-label">⚠️ Expirant sous 30j</span>
+              <span class="compliance-status status-warn">2 membres</span>
+            </div>
+            <div class="compliance-row">
+              <span class="compliance-label">❌ Expirés / manquants</span>
+              <span class="compliance-status status-danger">1 membre</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mon profil / brevet -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🏅 Mon niveau</span>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+              <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-dark));display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:18px;">AC</div>
+              <div>
+                <div style="font-weight:700;font-size:16px;">Anthony Capouet</div>
+                <div style="font-size:12px;color:var(--muted);">LIFRAS #1001 · admin</div>
+              </div>
+            </div>
+            <div class="compliance-row">
+              <span class="compliance-label">Brevet actuel</span>
+              <span class="compliance-status" style="color:var(--blue);font-weight:700;">Instructeur</span>
+            </div>
+            <div class="compliance-row">
+              <span class="compliance-label">Certificat médical</span>
+              <span class="compliance-status status-ok">✓ Valide jusqu'au 03/2026</span>
+            </div>
+            <div class="compliance-row">
+              <span class="compliance-label">Plongées enregistrées</span>
+              <span class="compliance-status" style="color:var(--text);">142 plongées</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🔔 Notifications récentes</span>
+            <span style="font-size:11px;background:#f97316;color:white;padding:2px 7px;border-radius:99px;font-weight:700;">3</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div style="padding:12px 20px;border-bottom:1px solid var(--border);background:#eff6ff;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);">📋 Nouvelle demande d'inscription</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">Marc R. souhaite rejoindre « Sortie carrière » du 25 mai.</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">Il y a 2 heures</div>
+            </div>
+            <div style="padding:12px 20px;border-bottom:1px solid var(--border);background:#eff6ff;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);">💬 Tom A. — Sortie carrière (25 mai)</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">On se retrouve au parking à 8h30 ?</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">Il y a 4 heures</div>
+            </div>
+            <div style="padding:12px 20px;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);">🤿 Nouveau participant</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">Julie D. a rejoint « Sortie mer Zélande » du 31 mai.</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">Hier</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Placeholder views -->
+  <div id="view-calendar"   style="display:none;"><div class="page-header"><h1>📅 Calendrier</h1><p>Gestion des événements</p></div><div class="card"><div class="card-body" style="height:400px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;">Calendrier complet dans l'application</div></div></div>
+  <div id="view-objectifs"  style="display:none;"><div class="page-header"><h1>🎯 Objectifs</h1><p>Suivi de progression</p></div><div class="card"><div class="card-body" style="height:400px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;">Objectifs et exercices dans l'application</div></div></div>
+  <div id="view-sites"      style="display:none;"><div class="page-header"><h1>📍 Sites</h1><p>Sites de plongée</p></div><div class="card"><div class="card-body" style="height:400px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;">Carte des sites dans l'application</div></div></div>
+  <div id="view-utile"      style="display:none;"><div class="page-header"><h1>💡 Utile</h1><p>Ressources & informations</p></div><div class="card"><div class="card-body" style="height:400px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;">Informations utiles dans l'application</div></div></div>
+  <div id="view-club"       style="display:none;"><div class="page-header"><h1>ℹ️ Le Club</h1><p>Club de Plongée Fleurusien</p></div><div class="card"><div class="card-body" style="height:400px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;">Informations du club dans l'application</div></div></div>
+  <div id="view-ca"         style="display:none;"><div class="page-header"><h1>🏛 Espace CA</h1><p>Stocks buvette & trésorerie</p></div><div class="card"><div class="card-body" style="height:400px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;">Espace CA dans l'application</div></div></div>
+  <div id="view-settings"   style="display:none;"><div class="page-header"><h1>⚙️ Paramètres</h1><p>Notifications & compte</p></div><div class="card"><div class="card-body" style="height:400px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;">Paramètres dans l'application</div></div></div>
+  <div id="view-admin"      style="display:none;"><div class="page-header"><h1>🛡 Approbations</h1><p>Gestion des nouveaux membres</p></div><div class="card"><div class="card-body" style="height:400px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;">Approbations dans l'application</div></div></div>
+
+</main>
+
+<script>
+  const views = { dashboard:'dashboard', calendar:'calendar', objectifs:'objectifs', sites:'sites', utile:'utile', club:'club', ca:'ca', settings:'settings', admin:'admin' }
+
+  function setActive(el, view) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+    el.classList.add('active')
+    Object.keys(views).forEach(k => {
+      const v = document.getElementById('view-' + k)
+      if (v) v.style.display = (k === view) ? 'block' : 'none'
+    })
+    if (window.innerWidth <= 768) toggleSidebar()
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open')
+    document.getElementById('overlay').classList.toggle('show')
+  }
+</script>
+</body>
+</html>
