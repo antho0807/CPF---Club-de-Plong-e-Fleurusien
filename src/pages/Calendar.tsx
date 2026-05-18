@@ -97,6 +97,7 @@ export function Calendar() {
   const { canCreateEvents, profile, isAdmin } = useAuth()
   const birthdays = useBirthdays(profile?.id)
   const [birthdayPopup, setBirthdayPopup] = useState<{ names: string[]; label: string } | null>(null)
+  const [dayPopup, setDayPopup] = useState<Date | null>(null)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
 
   // Toujours utiliser l'événement en direct depuis le tableau pour avoir les inscriptions à jour
@@ -208,18 +209,20 @@ export function Calendar() {
     return isHoliday ? { style: { backgroundColor: '#f9fafb' } } : {}
   }, [events])
 
-  // Composant date header avec point rose anniversaire cliquable
-  const DateHeaderComponent = useCallback(({ date, label, onDrillDown }: { date: Date; label: string; onDrillDown: (e: React.SyntheticEvent) => void }) => {
+  // Composant date header : clic sur le chiffre → popup du jour
+  const DateHeaderComponent = useCallback(({ date, label }: { date: Date; label: string; onDrillDown: (e: React.SyntheticEvent) => void }) => {
     const dayBdays = birthdays.filter(b => b.day === date.getDate() && b.month === date.getMonth() + 1)
     return (
       <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-        <button onClick={onDrillDown} className="rbc-button-link">{label}</button>
+        <button
+          onClick={(e) => { e.stopPropagation(); setDayPopup(date) }}
+          className="rbc-button-link"
+        >
+          {label}
+        </button>
         {dayBdays.length > 0 && (
           <span
-            onClick={(e) => {
-              e.stopPropagation()
-              setBirthdayPopup({ names: dayBdays.map(b => b.name), label })
-            }}
+            onClick={(e) => { e.stopPropagation(); setBirthdayPopup({ names: dayBdays.map(b => b.name), label }) }}
             style={{ width: 8, height: 8, borderRadius: '50%', background: '#ec4899', flexShrink: 0, cursor: 'pointer', display: 'inline-block' }}
             title="Voir les anniversaires"
           />
@@ -300,6 +303,80 @@ export function Calendar() {
         open={!!selectedEvent}
         onClose={() => setSelectedEventId(null)}
       />
+
+      {/* Popup résumé du jour */}
+      {dayPopup && (() => {
+        const isoDay = `${dayPopup.getFullYear()}-${String(dayPopup.getMonth()+1).padStart(2,'0')}-${String(dayPopup.getDate()).padStart(2,'0')}`
+        const dayEvents = expandedEvents.filter(e => e.date_start.slice(0,10) === isoDay)
+        const dayBdays = birthdays.filter(b => b.day === dayPopup.getDate() && b.month === dayPopup.getMonth()+1)
+        const dateLabel = dayPopup.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4" onClick={() => setDayPopup(null)}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100" onClick={e => e.stopPropagation()}>
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <div>
+                  <p className="font-bold text-gray-900 capitalize">{dateLabel}</p>
+                  {dayBdays.length > 0 && (
+                    <p className="text-xs text-pink-500 mt-0.5">🎂 {dayBdays.map(b => b.name).join(' · ')}</p>
+                  )}
+                </div>
+                <button onClick={() => setDayPopup(null)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+              </div>
+
+              {/* Événements du jour */}
+              <div className="max-h-64 overflow-y-auto">
+                {dayEvents.length === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-6">Aucun événement ce jour.</p>
+                ) : (
+                  dayEvents.map((ev, i) => {
+                    const color = EVENT_TYPE_COLORS[ev.event_type]
+                    const time = new Date(ev.date_start).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })
+                    return (
+                      <div
+                        key={ev.id + i}
+                        className={`flex items-start gap-3 px-5 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${i > 0 ? 'border-t border-gray-50' : ''}`}
+                        onClick={() => {
+                          if (ev.event_type === 'ferie') return
+                          const baseId = ev.id.length > 36 ? ev.id.substring(0, 36) : ev.id
+                          setSelectedEventId(baseId)
+                          setDayPopup(null)
+                        }}
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1.5" style={{ backgroundColor: color }} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 leading-snug">{ev.title}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{time}{ev.dive_sites ? ` · ${(ev.dive_sites as {name:string}).name}` : ''}</p>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+
+              {/* Action créer */}
+              {canCreateEvents && (
+                <div className="px-5 py-3 border-t border-gray-100">
+                  <button
+                    className="w-full text-sm font-medium text-[#0077b6] hover:text-[#005f8e] transition-colors py-1"
+                    onClick={() => {
+                      const y = dayPopup.getFullYear()
+                      const m = String(dayPopup.getMonth()+1).padStart(2,'0')
+                      const d = String(dayPopup.getDate()).padStart(2,'0')
+                      setPrefillDate(`${y}-${m}-${d}T09:00`)
+                      setShowForm(true)
+                      setDayPopup(null)
+                    }}
+                  >
+                    + Créer un événement ce jour
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Popup anniversaire */}
       {birthdayPopup && (
