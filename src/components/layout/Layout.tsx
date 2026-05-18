@@ -19,7 +19,7 @@ export function Layout() {
     <div
       className="flex min-h-[100dvh] relative"
       style={{
-        backgroundImage: "url('/image.plongée.test.jpg')",
+        backgroundImage: "url('/image-plongee.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
