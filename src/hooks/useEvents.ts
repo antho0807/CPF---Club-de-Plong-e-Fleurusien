@@ -95,7 +95,8 @@ export function useEvents() {
     if (error) throw error
 
     const event = events.find((e) => e.id === eventId)
-    if (event?.organizer_id) {
+    // Pas de notification pour les entraînements récurrents (spam)
+    if (event?.organizer_id && !event.is_recurring) {
       const dateStr = event.date_start ? ` du ${shortDate(event.date_start)}` : ''
       await createNotification({
         userId: event.organizer_id,
@@ -175,7 +176,8 @@ export function useEvents() {
     })
 
     // Notifier les autres participants confirmés qu'un nouveau membre a rejoint
-    if (accept) {
+    // Pas de notification pour les entraînements récurrents (ex: piscine du mardi)
+    if (accept && !event?.is_recurring) {
       const { data: confirmedRegs } = await supabase
         .from('event_registrations')
         .select('member_id')
