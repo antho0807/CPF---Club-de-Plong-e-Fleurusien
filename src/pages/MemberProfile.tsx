@@ -81,7 +81,7 @@ export function MemberProfile() {
   const { member, loading, refetch: refetchMember } = useMember(id)
   const { updateMember, deactivateMember } = useMembers()
   const { documents, refetch: refetchDocs, uploadDocument, deleteDocument } = useDocuments(id)
-  const { profile: currentUser, isAdmin, refreshProfile } = useAuth()
+  const { profile: currentUser, isAdmin, isSuperAdmin, refreshProfile } = useAuth()
   const [showEdit, setShowEdit] = useState(false)
   const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'code'>('idle')
   const [deleteCode, setDeleteCode] = useState('')
@@ -142,7 +142,8 @@ export function MemberProfile() {
             {member.is_ca ? '🏛 Retirer du CA' : '🏛 Ajouter au CA'}
           </Button>
         )}
-        {isAdmin && !isOwnProfile && (
+        {/* Supprimer/désactiver : impossible sur un super admin sauf par lui-même */}
+        {isAdmin && !isOwnProfile && !(member as { is_super_admin?: boolean }).is_super_admin && (
           <Button
             variant="outline"
             size="sm"
@@ -152,7 +153,10 @@ export function MemberProfile() {
             <Trash2 className="h-4 w-4" /> Supprimer le compte
           </Button>
         )}
-        {isAdmin && member.is_active && (
+        {(member as { is_super_admin?: boolean }).is_super_admin && !isOwnProfile && (
+          <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg">🛡 Gestionnaire protégé</span>
+        )}
+        {isAdmin && member.is_active && !(member as { is_super_admin?: boolean }).is_super_admin && (
           <Button
             variant="destructive"
             size="sm"

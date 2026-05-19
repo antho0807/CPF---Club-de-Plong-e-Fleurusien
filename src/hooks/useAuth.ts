@@ -96,7 +96,8 @@ export function useAuth() {
     await fetchProfile(user.id)
   }
 
-  const isAdmin = profile?.role === 'admin'
+  const isSuperAdmin = profile?.is_super_admin === true
+  const isAdmin = profile?.role === 'admin' || isSuperAdmin
   // Moniteur = brevet LIFRAS, pas un rôle. Compatibilité avec l'ancien rôle + brevet.
   const isMoniteur = isAdmin
     || profile?.role === 'moniteur' // rétrocompatibilité
@@ -106,14 +107,16 @@ export function useAuth() {
   const isApproved = profile?.status === 'approved'
   const isPending = profile?.status === 'pending'
   const isRejected = profile?.status === 'rejected'
-  const isCA = profile?.is_ca === true || isAdmin
+  const isCA = profile?.is_ca === true || isAdmin || isSuperAdmin
   // Peut créer des événements : admin/moniteur OU brevet P3★+
-  const canCreateEvents = profile ? canCreateAnyEvent(profile.role, profile.brevet_level) : false
+  // Super admin peut tout créer
+  const canCreateEvents = isSuperAdmin || (profile ? canCreateAnyEvent(profile.role, profile.brevet_level) : false)
 
   return {
     user,
     profile,
     loading,
+    isSuperAdmin,
     isAdmin,
     isMoniteur,
     isExterne,

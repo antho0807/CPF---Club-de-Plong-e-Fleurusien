@@ -48,6 +48,20 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Code invalide ou expiré' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } })
   }
 
+  // Vérifier que le compte cible n'est pas un super admin (protection absolue)
+  const { data: targetProfile } = await supabase
+    .from('profiles')
+    .select('is_super_admin')
+    .eq('id', user_id)
+    .single()
+
+  if (targetProfile?.is_super_admin) {
+    return new Response(
+      JSON.stringify({ error: 'Ce compte est protégé et ne peut pas être supprimé.' }),
+      { status: 403, headers: { ...CORS, 'Content-Type': 'application/json' } },
+    )
+  }
+
   // Supprimer le token (nettoyage avant la suppression du compte)
   await supabase.from('account_deletion_tokens').delete().eq('user_id', user_id)
 

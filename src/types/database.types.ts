@@ -59,6 +59,7 @@ export interface Profile {
   emergency_contact_relation: string | null
   is_active: boolean
   is_ca: boolean
+  is_super_admin: boolean
   notes: string | null
   created_at: string
 }
