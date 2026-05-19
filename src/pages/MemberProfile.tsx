@@ -83,8 +83,7 @@ export function MemberProfile() {
   const { documents, refetch: refetchDocs, uploadDocument, deleteDocument } = useDocuments(id)
   const { profile: currentUser, isAdmin, isSuperAdmin, refreshProfile } = useAuth()
   const [showEdit, setShowEdit] = useState(false)
-  const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'code'>('idle')
-  const [deleteCode, setDeleteCode] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
@@ -148,7 +147,7 @@ export function MemberProfile() {
             variant="outline"
             size="sm"
             className="gap-2 text-red-600 border-red-200 hover:bg-red-50"
-            onClick={() => setDeleteStep('confirm')}
+            onClick={() => { setDeleteError(null); setShowDeleteConfirm(true) }}
           >
             <Trash2 className="h-4 w-4" /> Supprimer le compte
           </Button>
@@ -296,61 +295,50 @@ export function MemberProfile() {
       </Tabs>
 
       {/* Edit dialog */}
-      {/* Dialog suppression définitive (admin) */}
-      <Dialog open={deleteStep !== 'idle'} onOpenChange={(o) => { if (!o) { setDeleteStep('idle'); setDeleteCode(''); setDeleteError(null) } }}>
+      {/* Dialog suppression définitive (admin) — confirmation simple */}
+      <Dialog open={showDeleteConfirm} onOpenChange={(o) => { if (!o) { setShowDeleteConfirm(false); setDeleteError(null) } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-red-700">Supprimer le compte de {member.full_name}</DialogTitle>
+            <DialogTitle className="text-red-700">Supprimer le compte ?</DialogTitle>
           </DialogHeader>
-          {deleteStep === 'confirm' && (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Cette action est <strong>irréversible</strong>. Un code de confirmation sera envoyé à votre adresse email ({currentUser?.email}).
-              </p>
-              {deleteError && <p className="text-xs text-red-600">{deleteError}</p>}
-              <div className="flex gap-2">
-                <Button size="sm" disabled={deleteLoading} className="bg-red-600 hover:bg-red-700 text-white gap-2"
-                  onClick={async () => {
-                    setDeleteLoading(true); setDeleteError(null)
-                    const { error } = await supabase.functions.invoke('request-delete-account', {
-                      body: { target_user_id: member.id },
-                    })
-                    if (error) { setDeleteError(error.message); setDeleteLoading(false); return }
-                    setDeleteStep('code'); setDeleteLoading(false)
-                  }}>
-                  {deleteLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Envoi…</> : 'Recevoir le code de confirmation'}
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => setDeleteStep('idle')}>Annuler</Button>
-              </div>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-700">
+              Vous êtes sur le point de supprimer définitivement le compte de{' '}
+              <strong>{member.full_name}</strong>.
+            </p>
+            <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-xs text-red-700 space-y-1">
+              <p>⚠️ Cette action est <strong>irréversible</strong>.</p>
+              <p>Toutes les données seront supprimées : profil, inscriptions, documents, messages.</p>
             </div>
-          )}
-          {deleteStep === 'code' && (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">Saisissez le code reçu par email :</p>
-              <input
-                className="w-32 text-2xl font-mono tracking-widest text-center border rounded-lg p-2 block"
-                placeholder="000000" maxLength={6}
-                value={deleteCode}
-                onChange={(e) => setDeleteCode(e.target.value.replace(/\D/g, ''))}
-              />
-              {deleteError && <p className="text-xs text-red-600">{deleteError}</p>}
-              <div className="flex gap-2">
-                <Button size="sm" disabled={deleteLoading || deleteCode.length !== 6}
-                  className="bg-red-600 hover:bg-red-700 text-white gap-2"
-                  onClick={async () => {
-                    setDeleteLoading(true); setDeleteError(null)
-                    const { error } = await supabase.functions.invoke('confirm-delete-account', {
-                      body: { user_id: member.id, token: deleteCode },
-                    })
-                    if (error) { setDeleteError('Code invalide ou expiré.'); setDeleteLoading(false); return }
-                    navigate('/membres')
-                  }}>
-                  {deleteLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Suppression…</> : 'Supprimer définitivement'}
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => { setDeleteStep('idle'); setDeleteCode('') }}>Annuler</Button>
-              </div>
+            {deleteError && <p className="text-xs text-red-600 font-medium">{deleteError}</p>}
+            <div className="flex gap-2 pt-1">
+              <Button
+                className="bg-red-600 hover:bg-red-700 text-white gap-2 flex-1"
+                disabled={deleteLoading}
+                onClick={async () => {
+                  setDeleteLoading(true)
+                  setDeleteError(null)
+                  const { error } = await supabase.functions.invoke('confirm-delete-account', {
+                    body: { user_id: member.id },
+                  })
+                  if (error) {
+                    setDeleteError(error.message)
+                    setDeleteLoading(false)
+                    return
+                  }
+                  navigate('/membres')
+                }}
+              >
+                {deleteLoading
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Suppression…</>
+                  : <><Trash2 className="h-4 w-4" /> Supprimer définitivement</>
+                }
+              </Button>
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} disabled={deleteLoading}>
+                Annuler
+              </Button>
             </div>
-          )}
+          </div>
         </DialogContent>
       </Dialog>
 
