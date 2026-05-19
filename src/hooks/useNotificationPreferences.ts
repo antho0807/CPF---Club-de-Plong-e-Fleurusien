@@ -73,8 +73,26 @@ export function useNotificationPreferences(userId: string | undefined) {
     setSaving(false)
   }
 
+  async function updateAllPrefs(value: boolean) {
+    if (!userId) return
+    setSaving(true)
+    const payload = {
+      user_id: userId,
+      new_event: value, event_reminder: value, registration_update: value,
+      new_message: value, account_approved: value, medical_expiry: value,
+      club_announcement: value,
+      updated_at: new Date().toISOString(),
+    }
+    const { data, error } = await supabase
+      .from('notification_preferences')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select().single()
+    if (!error) setPrefs(data as NotificationPreferences)
+    setSaving(false)
+  }
+
   // Retourne les préférences effectives (avec les défauts si aucune ligne n'existe)
   const effectivePrefs = prefs ?? { ...DEFAULT_PREFS, id: '', user_id: userId ?? '', updated_at: '' }
 
-  return { prefs: effectivePrefs, loading, saving, updatePref }
+  return { prefs: effectivePrefs, loading, saving, updatePref, updateAllPrefs }
 }

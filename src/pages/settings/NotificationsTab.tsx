@@ -11,7 +11,7 @@ import { Button } from '../../components/ui/button'
 export function NotificationsTab() {
   const { profile } = useAuth()
   const { notifications, unreadCount, markAllRead } = useNotifications(profile?.id)
-  const { prefs, loading, saving, updatePref } = useNotificationPreferences(profile?.id)
+  const { prefs, loading, saving, updatePref, updateAllPrefs } = useNotificationPreferences(profile?.id)
   const { supported, subscribed, loading: pushLoading, toggle } = usePushNotifications(profile?.id ?? null)
   const [testState, setTestState] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle')
   const [testError, setTestError] = useState<string | null>(null)
@@ -89,31 +89,44 @@ export function NotificationsTab() {
       {/* Préférences push */}
       <div>
         <h2 className="text-sm font-semibold text-gray-700 mb-1">Notifications push</h2>
-        <p className="text-xs text-gray-400 mb-4">Choisissez les types de notifications que vous souhaitez recevoir.</p>
+        <p className="text-xs text-gray-400 mb-3">Choisissez les types de notifications que vous souhaitez recevoir.</p>
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => <div key={i} className="h-12 bg-gray-100 animate-pulse rounded-xl" />)}
           </div>
-        ) : (
-          <div className="space-y-2">
-            {(Object.entries(NOTIF_PREF_LABELS) as [NotifPrefKey, string][]).map(([key, label]) => (
-              <label key={key} className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors">
-                <span className="text-sm text-gray-700">{label}</span>
+        ) : (() => {
+          const notifKeys = Object.keys(NOTIF_PREF_LABELS) as NotifPrefKey[]
+          const masterOn = notifKeys.some(k => prefs[k])
+          return (
+            <div className="space-y-2">
+              {/* Toggle maître */}
+              <label className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer">
+                <span className="text-sm font-semibold text-gray-800">Toutes les notifications</span>
                 <div className="relative ml-3 flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={prefs[key]}
-                    disabled={saving}
-                    onChange={(e) => updatePref(key, e.target.checked)}
-                  />
+                  <input type="checkbox" className="sr-only peer" checked={masterOn} disabled={saving}
+                    onChange={() => updateAllPrefs(!masterOn)} />
                   <div className="w-10 h-6 bg-gray-200 peer-checked:bg-[#0077b6] rounded-full transition-colors peer-disabled:opacity-50" />
                   <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
                 </div>
               </label>
-            ))}
-          </div>
-        )}
+
+              {/* Toggles individuels — grisés si maître OFF */}
+              <div className={`space-y-1.5 transition-opacity ${!masterOn ? 'opacity-40 pointer-events-none' : ''}`}>
+                {(Object.entries(NOTIF_PREF_LABELS) as [NotifPrefKey, string][]).map(([key, label]) => (
+                  <label key={key} className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors">
+                    <span className="text-sm text-gray-700">{label}</span>
+                    <div className="relative ml-3 flex-shrink-0">
+                      <input type="checkbox" className="sr-only peer" checked={prefs[key]} disabled={saving}
+                        onChange={(e) => updatePref(key, e.target.checked)} />
+                      <div className="w-10 h-6 bg-gray-200 peer-checked:bg-[#0077b6] rounded-full transition-colors peer-disabled:opacity-50" />
+                      <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       {/* Historique des notifications */}

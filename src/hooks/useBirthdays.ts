@@ -21,10 +21,15 @@ export function useBirthdays(currentUserId: string | undefined) {
         .not('date_naissance', 'is', null)
         .eq('is_active', true)
       setBirthdays(
-        (data ?? []).map((p) => {
-          const d = new Date(p.date_naissance as string)
+        (data ?? []).flatMap((p) => {
+          const raw = (p.date_naissance as string | null)?.slice(0, 10)
+          if (!raw) return []
+          const parts = raw.split('-')
+          const month = parseInt(parts[1], 10)
+          const day   = parseInt(parts[2], 10)
+          if (!month || !day) return []
           const name = (p.alias as string | null) || (p.full_name as string).split(' ')[0]
-          return { day: d.getDate(), month: d.getMonth() + 1, name, userId: p.id as string }
+          return [{ day, month, name, userId: p.id as string }]
         }),
       )
     }

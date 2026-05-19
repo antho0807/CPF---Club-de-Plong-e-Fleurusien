@@ -138,9 +138,19 @@ async function encrypt(plaintext: string, s: PushSub): Promise<Uint8Array> {
   return concat(salt, rs, new Uint8Array([sendPubRaw.length]), sendPubRaw, cipher)
 }
 
+// ─── CORS ────────────────────────────────────────────────────
+
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 // ─── Handler ─────────────────────────────────────────────────
 
 serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
+
   const { user_ids, notification_type, title, body, url }: Payload = await req.json()
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
@@ -163,14 +173,14 @@ serve(async (req) => {
     // Si un user n'a pas de ligne dans notification_preferences → préférence par défaut = true → inclus
   }
 
-  if (!eligibleUserIds.length) return new Response(JSON.stringify({ sent: 0, skipped: 'preferences' }), { status: 200 })
+  if (!eligibleUserIds.length) return new Response(JSON.stringify({ sent: 0, skipped: 'preferences' }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } })
 
   let q = supabase.from('push_subscriptions').select('subscription, user_id')
   if (eligibleUserIds.length) q = q.in('user_id', eligibleUserIds)
   const { data: subs, error } = await q
 
-  if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 })
-  if (!subs?.length) return new Response(JSON.stringify({ sent: 0 }), { status: 200 })
+  if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } })
+  if (!subs?.length) return new Response(JSON.stringify({ sent: 0 }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } })
 
   const PRIV = Deno.env.get('VAPID_PRIVATE_KEY')!.trim()
   const PUB  = Deno.env.get('VAPID_PUBLIC_KEY')!.trim()
@@ -209,6 +219,6 @@ serve(async (req) => {
 
   return new Response(
     JSON.stringify({ sent, total: subs.length, ...(errors.length && { errors }) }),
-    { status: 200, headers: { 'Content-Type': 'application/json' } },
+    { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } },
   )
 })
