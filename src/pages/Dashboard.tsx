@@ -141,8 +141,8 @@ export function Dashboard() {
 
           {/* Colonne latérale membre */}
           <div className="space-y-5">
-            <MemberProfileCard />
             <ObjectivesWidget />
+            <MemberProfileCard />
           </div>
         </div>
       )}
