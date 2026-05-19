@@ -22,7 +22,7 @@ export function Navbar({ onClose }: NavbarProps = {}) {
   const location = useLocation()
 
   return (
-    <aside className="flex flex-col w-64 fixed top-0 left-0 bottom-0 z-30 overflow-y-auto bg-[#0077b6] text-white">
+    <aside className="flex flex-col w-64 h-full overflow-y-auto bg-[#0077b6] text-white">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-white/20">
         <div className="bg-white rounded-full p-1 flex-shrink-0">
@@ -107,7 +107,7 @@ export function Navbar({ onClose }: NavbarProps = {}) {
       {/* User section */}
       <div className="px-3 py-4 border-t border-white/20">
         <Link
-          to="/profil"
+          to="/parametres?tab=account"
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors"
         >
           <User className="h-5 w-5" />

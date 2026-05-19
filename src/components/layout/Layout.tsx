@@ -16,21 +16,12 @@ export function Layout() {
   })
 
   return (
-    <div
-      className="flex min-h-[100dvh] relative"
-      style={{
-        backgroundImage: "linear-gradient(rgba(8,28,60,0.52),rgba(8,28,60,0.52)),url('/image-plongee.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
-      }}
-    >
+    <div className="flex h-[100dvh] overflow-hidden">
 
       <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
 
-      {/* Sidebar desktop — cachée sur mobile, visible sur md+ */}
-      <div className="hidden md:flex shrink-0">
+      {/* Sidebar desktop — flex item fixe, ne participe pas au scroll */}
+      <div className="hidden md:flex w-64 shrink-0 h-[100dvh]">
         <Navbar />
       </div>
 
@@ -50,12 +41,21 @@ export function Layout() {
         <Navbar onClose={() => setMobileNavOpen(false)} />
       </div>
 
-      {/* Contenu principal — décalé de la largeur de la sidebar fixe sur desktop */}
-      <div className="flex-1 flex flex-col min-w-0 md:ml-64">
+      {/* Contenu principal — scrolle indépendamment de la sidebar */}
+      <div className="flex-1 flex flex-col min-w-0 h-[100dvh] overflow-hidden">
         {/* Header mobile avec burger */}
         <MobileHeader onMenuOpen={() => setMobileNavOpen(true)} />
 
-        <main className="flex-1 overflow-y-auto pb-20 md:pb-0 pt-0 md:pt-0" key={location.pathname}>
+        <main
+          className="flex-1 overflow-y-auto pb-20 md:pb-0"
+          key={location.pathname}
+          style={{
+            backgroundImage: "linear-gradient(rgba(8,28,60,0.52),rgba(8,28,60,0.52)),url('/image-plongee.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'local',
+          }}
+        >
           <div className="max-w-6xl mx-auto px-4 py-4 md:py-6">
             <Outlet />
           </div>
