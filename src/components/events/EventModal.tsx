@@ -13,6 +13,8 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { useCompliance } from '../../hooks/useCompliance'
 import { useEvents, useEventExercises, useMemberProgress, useEventMessages } from '../../hooks/useEvents'
+import { createNotification } from '../../hooks/useNotifications'
+import { useMyObjectivesProgress } from '../../hooks/useMyObjectivesProgress'
 import {
   getRegistrationBlock, BREVET_LABELS, EVENT_TYPES_REQUIRE_MEDICAL,
   BREVET_ORDER,
@@ -94,6 +96,9 @@ export function EventModal({ event, open, onClose }: Props) {
     event?.id ?? null,
   )
   const { messages, sendMessage } = useEventMessages(event?.id ?? null)
+
+  const { remaining: myRemainingExercises } = useMyObjectivesProgress(profile?.id, profile?.brevet_level)
+  const [requestingEx, setRequestingEx] = useState<string | null>(null)
 
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -645,6 +650,51 @@ export function EventModal({ event, open, onClose }: Props) {
                     </div>
                   )
                 })}
+              </div>
+            )}
+
+            {/* ── Mes exercices à valider (depuis les objectifs perso) ── */}
+            {!canManage && isConfirmed && myRemainingExercises.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+                  🎯 Mes exercices à valider
+                  <span className="text-gray-300 font-normal normal-case">— demande à l'organisateur</span>
+                </p>
+                {myRemainingExercises.map(ex => (
+                  <div key={ex.id} className="flex items-center gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/40">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 leading-snug">{ex.label}</p>
+                      {ex.detail && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{ex.detail}</p>}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={requestingEx === ex.id}
+                      className="h-7 px-2.5 text-xs shrink-0 text-[#0077b6] border-blue-200 hover:bg-blue-50"
+                      onClick={async () => {
+                        if (!profile || !ev.id) return
+                        setRequestingEx(ex.id)
+                        const name = profile.alias || profile.full_name.split(' ')[0]
+                        // Message visible dans le chat de l'événement
+                        await sendMessage(memberId, `📋 Demande d'exercice : "${ex.label}"`)
+                        // Notification directe à l'organisateur
+                        const orgId = ev.organizer_id ?? ev.created_by
+                        if (orgId) {
+                          await createNotification({
+                            userId: orgId,
+                            type: 'new_message',
+                            title: '📋 Demande d\'exercice',
+                            body: `${name} demande à pratiquer "${ex.label}" lors de « ${ev.title} ».`,
+                            data: { eventId: ev.id },
+                          })
+                        }
+                        setRequestingEx(null)
+                      }}
+                    >
+                      {requestingEx === ex.id ? '…' : 'Demander'}
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
 

@@ -6,6 +6,7 @@ import { ComplianceWidget } from '../components/dashboard/ComplianceWidget'
 import { StatsCards } from '../components/dashboard/StatsCards'
 import { UpcomingEvents } from '../components/dashboard/UpcomingEvents'
 import { ExternalEvents } from '../components/dashboard/ExternalEvents'
+import { ObjectivesWidget } from '../components/dashboard/ObjectivesWidget'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { BREVET_LABELS } from '../lib/compliance'
@@ -140,6 +141,7 @@ export function Dashboard() {
           {/* Colonne latérale membre */}
           <div className="space-y-5">
             <MemberProfileCard />
+            <ObjectivesWidget />
             <Card className="border-blue-100 bg-blue-50/40">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
