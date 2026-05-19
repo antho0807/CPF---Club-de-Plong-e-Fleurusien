@@ -240,18 +240,6 @@ export function Calendar() {
         )}
       </div>
 
-      {/* Légende */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-        {Object.entries(EVENT_TYPE_COLORS)
-          .filter(([type]) => type !== 'ferie')
-          .map(([type, color]) => (
-            <div key={type} className="flex items-center gap-1.5 text-xs text-gray-500">
-              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-              {EVENT_TYPE_LABELS[type as keyof typeof EVENT_TYPE_LABELS]}
-            </div>
-          ))}
-      </div>
-
       {/* Calendrier */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {loading ? (
@@ -291,6 +279,18 @@ export function Calendar() {
             popup
           />
         )}
+      </div>
+
+      {/* Légende — en dessous du calendrier */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-1">
+        {Object.entries(EVENT_TYPE_COLORS)
+          .filter(([type]) => type !== 'ferie')
+          .map(([type, color]) => (
+            <div key={type} className="flex items-center gap-1.5 text-xs text-gray-500">
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+              {EVENT_TYPE_LABELS[type as keyof typeof EVENT_TYPE_LABELS]}
+            </div>
+          ))}
       </div>
 
       {/* Modal event existant */}

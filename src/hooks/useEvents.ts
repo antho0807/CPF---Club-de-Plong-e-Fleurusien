@@ -34,6 +34,7 @@ export function useEvents() {
     const { data, error } = await supabase
       .from('events')
       .select('*, dive_sites(*), event_registrations(*, profiles(*))')
+      .eq('is_cancelled', false)   // masquer les events annulés partout
       .order('date_start')
     if (!error && data) setEvents(asEvents(data))
     setLoading(false)
@@ -94,8 +95,42 @@ export function useEvents() {
       .update({ is_cancelled: true, cancel_reason: reason })
       .eq('id', id)
     if (error) throw error
-    // Mise à jour locale immédiate — pas de refetch bloquant
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, is_cancelled: true, cancel_reason: reason } : e))
+
+    const ev = events.find(e => e.id === id)
+
+    // Notifier tous les inscrits — non bloquant
+    const { data: regs } = await supabase
+      .from('event_registrations')
+      .select('member_id')
+      .eq('event_id', id)
+      .in('status', ['confirmed', 'pending'])
+
+    if (regs?.length && ev) {
+      const memberIds = regs.map(r => r.member_id)
+      const dateLabel = ev.date_start ? shortDate(ev.date_start) : ''
+      supabase.functions.invoke('send-push-notification', {
+        body: {
+          user_ids: memberIds,
+          notification_type: 'registration_update',
+          title: '❌ Événement annulé',
+          body: `"${ev.title}"${dateLabel ? ` du ${dateLabel}` : ''} a été annulé.`,
+        },
+      }).catch(console.error)
+
+      // Notification in-app pour chaque inscrit
+      await Promise.all(memberIds.map(uid =>
+        createNotification({
+          userId: uid,
+          type: 'registration_refused',
+          title: '❌ Événement annulé',
+          body: `"${ev.title}"${dateLabel ? ` du ${dateLabel}` : ''} a été annulé${reason ? ` : ${reason}` : ''}.`,
+          data: { eventId: id },
+        })
+      ))
+    }
+
+    // Retirer immédiatement de l'affichage (soft delete côté client)
+    setEvents(prev => prev.filter(e => e.id !== id))
     refetch()
   }
 
