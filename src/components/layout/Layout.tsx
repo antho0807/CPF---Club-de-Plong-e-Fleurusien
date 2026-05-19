@@ -2,9 +2,13 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import { BottomNav } from './BottomNav'
 import { MobileHeader } from './MobileHeader'
+import { PWABanner } from '../pwa/PWABanner'
+import { PWAGuide } from '../pwa/PWAGuide'
+import { usePWAInstall } from '../../hooks/usePWAInstall'
 
 export function Layout() {
   const location = useLocation()
+  const pwa = usePWAInstall()
 
   return (
     <div className="flex h-[100dvh] overflow-hidden">
@@ -35,6 +39,16 @@ export function Layout() {
         </main>
       </div>
 
+      {pwa.showBanner && (
+        <PWABanner onGuide={pwa.openGuide} onDismiss={pwa.dismiss} />
+      )}
+      {pwa.showGuide && (
+        <PWAGuide
+          onConfirm={pwa.confirmInstalled}
+          onRemindLater={pwa.remindLater}
+          onClose={pwa.closeGuide}
+        />
+      )}
       <BottomNav />
     </div>
   )

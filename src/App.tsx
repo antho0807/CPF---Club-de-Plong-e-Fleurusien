@@ -22,6 +22,7 @@ import { Rejected } from './pages/Rejected'
 import { AdminPending } from './pages/admin/AdminPending'
 import { Settings } from './pages/Settings'
 import { Notifications } from './pages/Notifications'
+import { InstallApp } from './pages/InstallApp'
 
 // Lazy loading CA : le code ne se charge QUE si l'utilisateur est CA/admin
 const CA = lazy(() => import('./pages/CA').then(m => ({ default: m.CA })))
@@ -111,6 +112,9 @@ export default function App() {
         <Route path="/register"        element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
         <Route path="/reset-password"  element={<ResetPassword />} />
+
+        {/* Page installation PWA — publique */}
+        <Route path="/installer-app" element={<InstallApp />} />
 
         {/* Statut du compte — connecté mais pas encore approuvé */}
         <Route path="/pending-approbation" element={<ConnectedRoute><PendingApproval /></ConnectedRoute>} />
