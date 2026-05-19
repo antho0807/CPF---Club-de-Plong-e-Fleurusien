@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Calendar, Briefcase, MoreHorizontal,
   Settings, Info, FileText, Bell, Users, ShieldCheck,
-  LogOut, ChevronRight,
+  LogOut, ChevronRight, MapPin, Lightbulb, Target,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useAuth } from '../../hooks/useAuth'
@@ -150,11 +150,11 @@ export function BottomNav() {
 
               {/* ── Navigation principale ── */}
               <div className="py-1.5">
-                <SheetItem icon={Settings} label="Paramètres" to="/parametres" onNav={navigate_and_close} />
-                <SheetItem icon={Info} label="Le Club" to="/club" onNav={navigate_and_close} />
-                {!isExterne && (
-                  <SheetItem icon={FileText} label="Documents" to="/profil" onNav={navigate_and_close} />
-                )}
+                <SheetItem icon={Info}      label="Le Club"      to="/club"       onNav={navigate_and_close} />
+                {!isExterne && <SheetItem icon={MapPin}    label="Sites"       to="/sites"      onNav={navigate_and_close} />}
+                {!isExterne && <SheetItem icon={Target}    label="Objectifs"   to="/objectifs"  onNav={navigate_and_close} />}
+                {!isExterne && <SheetItem icon={Lightbulb} label="Utile"       to="/utile"      onNav={navigate_and_close} />}
+                {!isExterne && <SheetItem icon={FileText}  label="Documents"   to="/profil"     onNav={navigate_and_close} />}
                 <SheetItem
                   icon={Bell}
                   label="Notifications"
@@ -162,6 +162,7 @@ export function BottomNav() {
                   onNav={navigate_and_close}
                   badge={unreadCount}
                 />
+                <SheetItem icon={Settings} label="Paramètres"   to="/parametres" onNav={navigate_and_close} />
               </div>
 
               {/* ── Section admin ── */}
