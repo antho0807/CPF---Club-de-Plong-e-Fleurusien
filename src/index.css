@@ -73,10 +73,20 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 8px 20px rgba(0,0,0,0.08) !important;
 }
 
-/* ─── Animation popup journée calendrier ─── */
+/* ─── Animations ─── */
 @keyframes slideUp {
   from { transform: translateY(16px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ─── react-big-calendar — Design moderne ─── */
