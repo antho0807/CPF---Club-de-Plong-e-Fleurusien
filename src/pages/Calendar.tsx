@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Calendar as BigCalendar,
   dateFnsLocalizer,
@@ -10,7 +11,7 @@ import {
 import { format, parse, startOfWeek, getDay } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, Users, MapPin } from 'lucide-react'
 import { useEvents } from '../hooks/useEvents'
 import { useAuth } from '../hooks/useAuth'
 import { useBirthdays } from '../hooks/useBirthdays'
@@ -25,17 +26,9 @@ const locales = { fr }
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales })
 
 const messages = {
-  allDay: 'Journée',
-  previous: '‹',
-  next: '›',
-  today: "Aujourd'hui",
-  month: 'Mois',
-  week: 'Semaine',
-  day: 'Jour',
-  agenda: 'Agenda',
-  date: 'Date',
-  time: 'Heure',
-  event: 'Événement',
+  allDay: 'Journée', previous: '‹', next: '›', today: "Aujourd'hui",
+  month: 'Mois', week: 'Semaine', day: 'Jour', agenda: 'Agenda',
+  date: 'Date', time: 'Heure', event: 'Événement',
   noEventsInRange: 'Aucun événement sur cette période.',
   showMore: (count: number) => `+ ${count} autre${count > 1 ? 's' : ''}`,
 }
@@ -51,41 +44,26 @@ function CalendarToolbar({ label, onNavigate, onView, view }: ToolbarProps) {
   return (
     <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-3 flex-wrap border-b border-gray-100">
       <div className="flex items-center gap-1.5">
-        <button
-          onClick={() => nav('PREV')}
-          aria-label="Précédent"
-          className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
-        >
+        <button onClick={() => nav('PREV')} aria-label="Précédent"
+          className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
           <ChevronLeft className="h-4 w-4 text-gray-600" />
         </button>
-        <button
-          onClick={() => nav('TODAY')}
-          className="px-3 h-8 text-xs font-medium rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-gray-700"
-        >
+        <button onClick={() => nav('TODAY')}
+          className="px-3 h-8 text-xs font-medium rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-gray-700">
           Aujourd'hui
         </button>
-        <button
-          onClick={() => nav('NEXT')}
-          aria-label="Suivant"
-          className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
-        >
+        <button onClick={() => nav('NEXT')} aria-label="Suivant"
+          className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
           <ChevronRight className="h-4 w-4 text-gray-600" />
         </button>
         <span className="text-sm font-semibold text-gray-900 capitalize ml-1">{label}</span>
       </div>
       <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 gap-0.5">
         {VIEW_OPTIONS.map(({ key, label: l }) => (
-          <button
-            key={key}
-            onClick={() => onView(key)}
+          <button key={key} onClick={() => onView(key)}
             className={`px-3 h-7 text-xs font-medium rounded-md transition-colors ${
-              view === key
-                ? 'bg-white text-[#0077b6] shadow-sm font-semibold'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {l}
-          </button>
+              view === key ? 'bg-white text-[#0077b6] shadow-sm font-semibold' : 'text-gray-500 hover:text-gray-700'
+            }`}>{l}</button>
         ))}
       </div>
     </div>
@@ -93,37 +71,37 @@ function CalendarToolbar({ label, onNavigate, onView, view }: ToolbarProps) {
 }
 
 export function Calendar() {
+  const navigate = useNavigate()
   const { events, loading, createEvent } = useEvents()
-  const { canCreateEvents, profile, isAdmin } = useAuth()
+  const { canCreateEvents, profile } = useAuth()
   const birthdays = useBirthdays(profile?.id)
-  const [birthdayPopup, setBirthdayPopup] = useState<{ names: string[]; label: string } | null>(null)
+
   const [dayPopup, setDayPopup] = useState<Date | null>(null)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
-
-  // Toujours utiliser l'événement en direct depuis le tableau pour avoir les inscriptions à jour
   const selectedEvent = selectedEventId ? (events.find(e => e.id === selectedEventId) ?? null) : null
+
   const [showForm, setShowForm] = useState(false)
   const [calView, setCalView] = useState<View>('month')
   const [calDate, setCalDate] = useState(new Date())
   const [prefillDate, setPrefillDate] = useState<string>('')
-  const [noAccessMsg, setNoAccessMsg] = useState<string | null>(null)
 
-  // Clic sur un créneau vide du calendrier
+  // ── En vue mois : clic sur créneau vide → popup du jour
+  //    En vue semaine/agenda : clic → créer event directement
   function handleSelectSlot({ start }: { start: Date }) {
-    if (canCreateEvents) {
-      // Pré-remplir date + heure par défaut (09:00)
+    if (calView === 'month') {
+      setDayPopup(start)
+    } else if (canCreateEvents) {
       const y = start.getFullYear()
       const m = String(start.getMonth() + 1).padStart(2, '0')
       const d = String(start.getDate()).padStart(2, '0')
-      setPrefillDate(`${y}-${m}-${d}T09:00`)
+      const h = String(start.getHours()).padStart(2, '0')
+      const mi = String(start.getMinutes()).padStart(2, '0')
+      setPrefillDate(`${y}-${m}-${d}T${h}:${mi}`)
       setShowForm(true)
-    } else {
-      setNoAccessMsg('Réservé aux membres P3★ et plus')
-      setTimeout(() => setNoAccessMsg(null), 3000)
     }
   }
 
-  // Expanse les événements récurrents (FREQ=WEEKLY;BYDAY=XX) sur 12 mois
+  // ── Expansion des événements récurrents ──────────────────
   const expandedEvents = useMemo(() => {
     const DAY: Record<string, number> = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 }
     const rangeStart = new Date(); rangeStart.setMonth(rangeStart.getMonth() - 1)
@@ -138,14 +116,10 @@ export function Calendar() {
       if (targetDay === undefined) { result.push(ev); continue }
 
       const base = new Date(ev.date_start)
-      const duration = ev.date_end
-        ? new Date(ev.date_end).getTime() - base.getTime()
-        : 90 * 60 * 1000
-
+      const duration = ev.date_end ? new Date(ev.date_end).getTime() - base.getTime() : 90 * 60 * 1000
       const cur = new Date(rangeStart)
       cur.setHours(base.getHours(), base.getMinutes(), 0, 0)
       while (cur.getDay() !== targetDay) cur.setDate(cur.getDate() + 1)
-
       while (cur <= rangeEnd) {
         const occStart = new Date(cur)
         result.push({
@@ -160,29 +134,30 @@ export function Calendar() {
     return result
   }, [events])
 
+  // ── Events RBC — fériés inclus (stylés différemment) ─────
   const calendarEvents: RBCEvent[] = useMemo(
-    () =>
-      expandedEvents.map((e) => ({
-        title: e.is_recurring ? `🏊 ${e.title}` : e.title,
-        start: new Date(e.date_start),
-        end: e.date_end ? new Date(e.date_end) : new Date(e.date_start),
-        resource: e,
-      })),
+    () => expandedEvents.map((e) => ({
+      title: e.is_recurring && e.event_type !== 'ferie' ? `🏊 ${e.title}` : e.title,
+      start: new Date(e.date_start),
+      end: e.date_end ? new Date(e.date_end) : new Date(e.date_start),
+      resource: e,
+    })),
     [expandedEvents],
   )
 
+  // ── Style des events ──────────────────────────────────────
   const eventPropGetter = useCallback((rbc: RBCEvent) => {
     const e = rbc.resource as Event
     if (e.event_type === 'ferie') {
       return {
         style: {
-          backgroundColor: '#e5e7eb',
-          color: '#9ca3af',
-          borderRadius: '3px',
+          backgroundColor: 'transparent',
+          color: '#bbb',
           border: 'none',
-          fontSize: '0.65rem',
-          fontWeight: '400',
-          padding: '1px 4px',
+          boxShadow: 'none',
+          fontSize: '9px',
+          fontStyle: 'italic',
+          padding: '0 2px',
           cursor: 'default',
           pointerEvents: 'none' as const,
         },
@@ -203,30 +178,39 @@ export function Calendar() {
     }
   }, [])
 
-  // Fond grisé léger sur les jours fériés
+  // ── Fond grisé sur les jours fériés ──────────────────────
   const dayPropGetter = useCallback((date: Date) => {
     const iso = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
     const isHoliday = events.some(e => e.event_type === 'ferie' && e.date_start.slice(0,10) === iso)
     return isHoliday ? { style: { backgroundColor: '#f9fafb' } } : {}
   }, [events])
 
-  // Clic sur le chiffre → popup de la journée
-  const DateHeaderComponent = useCallback(({ date, label }: { date: Date; label: string; onDrillDown: (e: React.SyntheticEvent) => void }) => {
+  // ── Rendu custom de l'event en vue mois (fériés = texte italic) ──
+  const MonthEventComponent = useCallback(({ event }: { event: RBCEvent }) => {
+    const ev = event.resource as Event
+    if (ev.event_type === 'ferie') {
+      const name = ev.title.replace(/^Jour férié — /, '').replace(/[🎄🇧🇪]/g, '').trim()
+      return <span style={{ fontSize: '9px', fontStyle: 'italic', color: '#bbb', display: 'block', textAlign: 'center' }}>{name}</span>
+    }
+    return <span>{event.title as string}</span>
+  }, [])
+
+  // ── Date header : chiffre + 🎂 si anniversaire ────────────
+  const DateHeaderComponent = useCallback(({ date, label }: {
+    date: Date; label: string; onDrillDown: (e: React.SyntheticEvent) => void
+  }) => {
     const dayBdays = birthdays.filter(b => b.day === date.getDate() && b.month === date.getMonth() + 1)
     return (
       <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-        <button
-          onClick={(e) => { e.stopPropagation(); setDayPopup(date) }}
-          className="rbc-button-link"
-        >
+        <button onClick={(e) => { e.stopPropagation(); setDayPopup(date) }} className="rbc-button-link">
           {label}
         </button>
         {dayBdays.length > 0 && (
           <span
-            onClick={(e) => { e.stopPropagation(); setBirthdayPopup({ names: dayBdays.map(b => b.name), label }) }}
-            style={{ width: 8, height: 8, borderRadius: '50%', background: '#ec4899', flexShrink: 0, cursor: 'pointer', display: 'inline-block' }}
-            title="Voir les anniversaires"
-          />
+            title={dayBdays.map(b => `🎂 ${b.name}`).join(' · ')}
+            onClick={(e) => { e.stopPropagation(); setDayPopup(date) }}
+            style={{ fontSize: '11px', cursor: 'pointer', lineHeight: 1, display: 'inline-block' }}
+          >🎂</span>
         )}
       </span>
     )
@@ -251,20 +235,21 @@ export function Calendar() {
         </div>
         {canCreateEvents && (
           <Button size="sm" onClick={() => setShowForm(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Créer un événement
+            <Plus className="h-4 w-4" /> Créer un événement
           </Button>
         )}
       </div>
 
-      {/* Légende des types */}
+      {/* Légende */}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-        {Object.entries(EVENT_TYPE_COLORS).map(([type, color]) => (
-          <div key={type} className="flex items-center gap-1.5 text-xs text-gray-500">
-            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-            {EVENT_TYPE_LABELS[type as keyof typeof EVENT_TYPE_LABELS]}
-          </div>
-        ))}
+        {Object.entries(EVENT_TYPE_COLORS)
+          .filter(([type]) => type !== 'ferie')
+          .map(([type, color]) => (
+            <div key={type} className="flex items-center gap-1.5 text-xs text-gray-500">
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+              {EVENT_TYPE_LABELS[type as keyof typeof EVENT_TYPE_LABELS]}
+            </div>
+          ))}
       </div>
 
       {/* Calendrier */}
@@ -286,7 +271,13 @@ export function Calendar() {
             views={['month', 'week', 'agenda']}
             eventPropGetter={eventPropGetter}
             dayPropGetter={dayPropGetter}
-            components={{ toolbar: CalendarToolbar, month: { dateHeader: DateHeaderComponent } }}
+            components={{
+              toolbar: CalendarToolbar,
+              month: {
+                dateHeader: DateHeaderComponent,
+                event: MonthEventComponent,
+              },
+            }}
             scrollToTime={new Date(1970, 1, 1, 8, 0)}
             onSelectEvent={(rbc) => {
               const e = rbc.resource as Event
@@ -302,19 +293,21 @@ export function Calendar() {
         )}
       </div>
 
+      {/* Modal event existant */}
       <EventModal
         event={selectedEvent}
         open={!!selectedEvent}
         onClose={() => setSelectedEventId(null)}
       />
 
-
-      {/* ── Popup journée ── */}
+      {/* ══ POPUP RÉCAPITULATIF DU JOUR ══ */}
       {dayPopup && (() => {
         const d = dayPopup
         const isoDay = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-        const dayEvents = expandedEvents.filter(e => e.date_start.slice(0,10) === isoDay)
+        const dayRegularEvents = expandedEvents.filter(e => e.date_start.slice(0,10) === isoDay && e.event_type !== 'ferie')
+        const dayHoliday = expandedEvents.find(e => e.date_start.slice(0,10) === isoDay && e.event_type === 'ferie')
         const dayBdays = birthdays.filter(b => b.day === d.getDate() && b.month === d.getMonth()+1)
+        const holidayName = dayHoliday?.title.replace(/^Jour férié — /, '').replace(/[🎄🇧🇪🎊]/g, '').trim()
         const dateLabel = d.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
         function openCreate() {
@@ -327,68 +320,125 @@ export function Calendar() {
         }
 
         return (
-          <div className="fixed inset-0 z-50 flex items-start justify-center pt-14 px-4 pb-4" onClick={() => setDayPopup(null)}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100" onClick={e => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
+            onClick={() => setDayPopup(null)}
+          >
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/40" />
 
+            {/* Popup — bottom sheet sur mobile, modal sur desktop */}
+            <div
+              className="relative bg-white w-full sm:max-w-[420px] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh]"
+              onClick={e => e.stopPropagation()}
+              style={{ animation: 'slideUp 0.2s ease-out' }}
+            >
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 bg-[#0077b6] text-white">
+              <div className="flex items-start justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
                 <div>
-                  <p className="font-bold capitalize leading-tight">{dateLabel}</p>
-                  {dayBdays.length > 0 && (
-                    <p className="text-xs text-blue-200 mt-0.5">🎂 {dayBdays.map(b => b.name).join(' · ')}</p>
+                  <p className="font-bold text-gray-900 capitalize text-base leading-tight">{dateLabel}</p>
+                  {dayHoliday && (
+                    <p className="text-xs text-gray-400 italic mt-0.5">📅 Jour férié — {holidayName}</p>
                   )}
                 </div>
-                <button onClick={() => setDayPopup(null)} className="text-white/70 hover:text-white text-2xl leading-none ml-4">×</button>
+                <button onClick={() => setDayPopup(null)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none ml-3 mt-0.5">×</button>
               </div>
 
-              {/* Événements */}
-              <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
-                {dayEvents.length === 0 ? (
-                  <p className="text-sm text-gray-400 text-center py-8">Aucun événement ce jour.</p>
-                ) : (
-                  dayEvents.map((ev, i) => {
-                    const color = EVENT_TYPE_COLORS[ev.event_type]
-                    const time = new Date(ev.date_start).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })
-                    const isFerie = ev.event_type === 'ferie'
-                    return (
-                      <div
-                        key={ev.id + i}
-                        className={`flex items-center gap-3 px-5 py-3 transition-colors ${!isFerie ? 'cursor-pointer hover:bg-gray-50' : ''}`}
-                        onClick={() => {
-                          if (isFerie) return
-                          const baseId = ev.id.length > 36 ? ev.id.substring(0, 36) : ev.id
-                          setSelectedEventId(baseId)
-                          setDayPopup(null)
-                        }}
-                      >
-                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-semibold leading-snug ${isFerie ? 'text-gray-400' : 'text-gray-900'}`}>{ev.title}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {time}
-                            {ev.dive_sites && ` · ${(ev.dive_sites as { name: string }).name}`}
-                          </p>
-                        </div>
-                        {!isFerie && <span className="text-gray-300 text-xs flex-shrink-0">›</span>}
-                      </div>
-                    )
-                  })
+              {/* Contenu scrollable */}
+              <div className="overflow-y-auto flex-1">
+
+                {/* A) Timeline des événements */}
+                <div className="px-5 py-4">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Événements</p>
+                  {dayRegularEvents.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-4">Aucun événement ce jour.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {dayRegularEvents
+                        .sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime())
+                        .map((ev, i) => {
+                          const color = EVENT_TYPE_COLORS[ev.event_type]
+                          const time = new Date(ev.date_start).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })
+                          const confirmed = ev.event_registrations?.filter(r => r.status === 'confirmed').length ?? 0
+                          return (
+                            <div
+                              key={ev.id + i}
+                              className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors border border-gray-100"
+                              onClick={() => {
+                                const baseId = ev.id.length > 36 ? ev.id.substring(0, 36) : ev.id
+                                setSelectedEventId(baseId)
+                                setDayPopup(null)
+                              }}
+                            >
+                              <div className="flex-shrink-0 text-right">
+                                <p className="text-xs font-mono font-semibold text-gray-500 w-10">{time}</p>
+                              </div>
+                              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1" style={{ backgroundColor: color }} />
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-semibold text-gray-900 leading-snug ${ev.is_cancelled ? 'line-through text-gray-400' : ''}`}>
+                                  {ev.title}
+                                </p>
+                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                  {ev.dive_sites && (
+                                    <span className="flex items-center gap-0.5 text-xs text-gray-400">
+                                      <MapPin className="h-3 w-3" />
+                                      {(ev.dive_sites as { name: string }).name}
+                                    </span>
+                                  )}
+                                  {confirmed > 0 && (
+                                    <span className="flex items-center gap-0.5 text-xs text-gray-400">
+                                      <Users className="h-3 w-3" />
+                                      {confirmed}{ev.max_participants ? `/${ev.max_participants}` : ''}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <span className="text-gray-300 text-sm flex-shrink-0">›</span>
+                            </div>
+                          )
+                        })
+                      }
+                    </div>
+                  )}
+                </div>
+
+                {/* B) Anniversaires */}
+                {dayBdays.length > 0 && (
+                  <div className="px-5 py-3 border-t border-gray-50">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">🎂 Anniversaires</p>
+                    <div className="space-y-1.5">
+                      {dayBdays.map((b) => (
+                        <button
+                          key={b.userId}
+                          className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-pink-50 transition-colors text-left"
+                          onClick={() => { navigate(`/membres/${b.userId}`); setDayPopup(null) }}
+                        >
+                          <span className="text-lg leading-none">🎂</span>
+                          <span className="text-sm font-semibold text-gray-800">{b.name}</span>
+                          <span className="text-xs text-gray-400 ml-auto">Voir le profil →</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* C) Jour férié */}
+                {dayHoliday && (
+                  <div className="px-5 py-3 border-t border-gray-50">
+                    <p className="text-xs text-gray-400 italic">📅 Jour férié — {holidayName}</p>
+                  </div>
                 )}
               </div>
 
-              {/* Créer un événement */}
-              {canCreateEvents ? (
-                <div className="px-5 py-3 border-t border-gray-100">
+              {/* D) Bouton créer event */}
+              {canCreateEvents && (
+                <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0">
                   <button
                     onClick={openCreate}
-                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-[#0077b6] hover:text-[#005f8e] py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-[#0077b6] hover:text-[#005f8e] py-2.5 rounded-xl hover:bg-blue-50 transition-colors border border-blue-100"
                   >
                     <Plus className="h-4 w-4" /> Créer un événement ce jour
                   </button>
-                </div>
-              ) : (
-                <div className="px-5 py-3 border-t border-gray-100">
-                  <p className="text-xs text-gray-400 text-center">P3★ minimum requis pour créer un événement</p>
                 </div>
               )}
             </div>
@@ -396,49 +446,10 @@ export function Calendar() {
         )
       })()}
 
-      {/* Popup anniversaire */}
-      {birthdayPopup && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          onClick={() => setBirthdayPopup(null)}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-xl px-8 py-6 text-center max-w-sm w-full border border-pink-100"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-4xl mb-3">🎂</div>
-            <p className="text-lg font-bold text-gray-900 mb-1">
-              {birthdayPopup.names.length === 1
-                ? `Bon anniversaire ${birthdayPopup.names[0]} !`
-                : `Anniversaires du ${birthdayPopup.label}`}
-            </p>
-            {birthdayPopup.names.length > 1 && (
-              <p className="text-gray-600 text-sm">
-                {birthdayPopup.names.join(' · ')}
-              </p>
-            )}
-            <button
-              onClick={() => setBirthdayPopup(null)}
-              className="mt-4 text-xs text-gray-400 hover:text-gray-600"
-            >
-              Fermer
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Message accès refusé */}
-      {noAccessMsg && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 text-white text-sm px-4 py-2 rounded-full shadow-lg">
-          {noAccessMsg}
-        </div>
-      )}
-
+      {/* Formulaire création event */}
       <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) setPrefillDate('') }}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Créer un événement</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Créer un événement</DialogTitle></DialogHeader>
           <EventForm
             createdBy={profile.id}
             creatorRole={profile.role}
