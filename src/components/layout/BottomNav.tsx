@@ -5,16 +5,22 @@ import { useAuth } from '../../hooks/useAuth'
 
 export function BottomNav() {
   const location = useLocation()
-  const { isAdmin, isMoniteur } = useAuth()
+  const { isAdmin, isMoniteur, isExterne } = useAuth()
   const canManage = isAdmin || isMoniteur
 
-  const tabs = [
-    { to: '/', label: 'Accueil', icon: LayoutDashboard },
-    { to: '/calendrier', label: 'Agenda', icon: Calendar },
-    ...(canManage ? [{ to: '/membres', label: 'Membres', icon: Users }] : []),
-    { to: '/objectifs', label: 'Objectifs', icon: Target },
-    { to: '/profil', label: 'Profil', icon: User },
-  ]
+  const tabs = isExterne
+    ? [
+        { to: '/', label: 'Accueil', icon: LayoutDashboard },
+        { to: '/calendrier', label: 'Agenda', icon: Calendar },
+        { to: '/profil', label: 'Profil', icon: User },
+      ]
+    : [
+        { to: '/', label: 'Accueil', icon: LayoutDashboard },
+        { to: '/calendrier', label: 'Agenda', icon: Calendar },
+        ...(canManage ? [{ to: '/membres', label: 'Membres', icon: Users }] : []),
+        { to: '/objectifs', label: 'Objectifs', icon: Target },
+        { to: '/profil', label: 'Profil', icon: User },
+      ]
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 safe-area-bottom">

@@ -8,7 +8,7 @@ export type BrevetLevel =
   | 'moniteur_federal'
   | 'instructeur'
 
-export type UserRole = 'admin' | 'moniteur' | 'membre'
+export type UserRole = 'admin' | 'moniteur' | 'membre' | 'externe'
 export type StockCategory = 'boisson' | 'snack' | 'autre'
 export type StockReason = 'achat' | 'vente' | 'perte' | 'ajustement'
 export type TreasuryCategory = 'buvette' | 'cotisation' | 'achat_stock' | 'evenement' | 'autre'

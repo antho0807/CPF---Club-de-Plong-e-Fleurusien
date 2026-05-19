@@ -18,7 +18,7 @@ const navItems = [
 interface NavbarProps { onClose?: () => void }
 
 export function Navbar({ onClose }: NavbarProps = {}) {
-  const { profile, signOut, isAdmin, isCA } = useAuth()
+  const { profile, signOut, isAdmin, isCA, isExterne } = useAuth()
   const location = useLocation()
 
   return (
@@ -36,7 +36,10 @@ export function Navbar({ onClose }: NavbarProps = {}) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map(({ to, label, icon: Icon }) => {
+        {(isExterne
+          ? navItems.filter(i => i.to === '/' || i.to === '/calendrier')
+          : navItems
+        ).map(({ to, label, icon: Icon }) => {
           const active = location.pathname === to || (to === '/club' && location.pathname.startsWith('/club'))
           return (
             <Link

@@ -22,7 +22,7 @@ const schema = z.object({
   emergency_contact_name: z.string().optional(),
   emergency_contact_phone: z.string().optional(),
   emergency_contact_relation: z.string().optional(),
-  role: z.enum(['admin', 'moniteur', 'membre']),
+  role: z.enum(['admin', 'moniteur', 'membre', 'externe']),
   notes: z.string().optional(),
 })
 
@@ -148,7 +148,8 @@ export function MemberForm({ initial, onSubmit, onCancel, isAdmin = false }: Pro
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="membre">Membre</SelectItem>
+                <SelectItem value="externe">Membre externe</SelectItem>
+                <SelectItem value="membre">Membre effectif</SelectItem>
                 <SelectItem value="moniteur">Moniteur</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>

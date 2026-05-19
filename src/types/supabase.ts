@@ -30,7 +30,7 @@ export interface Database {
             | 'moniteur_federal'
             | 'instructeur'
             | null
-          role: 'admin' | 'moniteur' | 'membre'
+          role: 'admin' | 'moniteur' | 'membre' | 'externe'
           status: 'pending' | 'approved' | 'rejected'
           alias: string | null
           is_active: boolean
@@ -55,7 +55,7 @@ export interface Database {
             | 'moniteur_federal'
             | 'instructeur'
             | null
-          role?: 'admin' | 'moniteur' | 'membre'
+          role?: 'admin' | 'moniteur' | 'membre' | 'externe'
           status?: 'pending' | 'approved' | 'rejected'
           alias?: string | null
           is_active?: boolean
@@ -80,7 +80,7 @@ export interface Database {
             | 'moniteur_federal'
             | 'instructeur'
             | null
-          role?: 'admin' | 'moniteur' | 'membre'
+          role?: 'admin' | 'moniteur' | 'membre' | 'externe'
           status?: 'pending' | 'approved' | 'rejected'
           alias?: string | null
           is_active?: boolean

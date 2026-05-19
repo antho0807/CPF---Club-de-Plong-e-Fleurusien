@@ -60,6 +60,11 @@ function ProtectedRoute({ children, requireAdmin = false }: { children: React.Re
   if (profile.status === 'pending') return <Navigate to="/pending-approbation" replace />
   if (profile.status === 'rejected') return <Navigate to="/refus" replace />
   if (requireAdmin && profile.role !== 'admin') return <Navigate to="/" replace />
+  // Membre externe : pages non autorisées → redirect calendrier
+  const EXTERNE_ALLOWED = ['/', '/calendrier', '/profil', '/parametres']
+  if (profile.role === 'externe' && !EXTERNE_ALLOWED.some(p => window.location.pathname === p || window.location.pathname.startsWith(p + '?'))) {
+    return <Navigate to="/calendrier" replace />
+  }
 
   return <>{children}</>
 }

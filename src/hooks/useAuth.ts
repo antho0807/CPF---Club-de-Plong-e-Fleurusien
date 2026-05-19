@@ -98,6 +98,7 @@ export function useAuth() {
 
   const isAdmin = profile?.role === 'admin'
   const isMoniteur = profile?.role === 'moniteur' || isAdmin
+  const isExterne = profile?.role === 'externe'
   const isMembre = !!profile
   const isApproved = profile?.status === 'approved'
   const isPending = profile?.status === 'pending'
@@ -112,6 +113,7 @@ export function useAuth() {
     loading,
     isAdmin,
     isMoniteur,
+    isExterne,
     isMembre,
     isApproved,
     isPending,
