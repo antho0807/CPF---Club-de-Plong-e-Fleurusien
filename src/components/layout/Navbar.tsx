@@ -22,7 +22,7 @@ export function Navbar({ onClose }: NavbarProps = {}) {
   const location = useLocation()
 
   return (
-    <aside className="flex flex-col w-64 min-h-[100dvh] bg-[#0077b6] text-white">
+    <aside className="flex flex-col w-64 fixed top-0 left-0 bottom-0 z-30 overflow-y-auto bg-[#0077b6] text-white">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-white/20">
         <div className="bg-white rounded-full p-1 flex-shrink-0">

@@ -50,8 +50,8 @@ export function Layout() {
         <Navbar onClose={() => setMobileNavOpen(false)} />
       </div>
 
-      {/* Contenu principal */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Contenu principal — décalé de la largeur de la sidebar fixe sur desktop */}
+      <div className="flex-1 flex flex-col min-w-0 md:ml-64">
         {/* Header mobile avec burger */}
         <MobileHeader onMenuOpen={() => setMobileNavOpen(true)} />
 
