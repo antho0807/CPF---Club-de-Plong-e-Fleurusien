@@ -50,13 +50,29 @@ export function MeetingsTab() {
   useEffect(() => { refetch() }, [refetch])
 
   async function handleSave() {
-    if (!title || !date) return
+    if (!title || !date || !profile) return
     setSaving(true)
-    await supabase.from('ca_meetings').insert({
-      title, meeting_date: new Date(date).toISOString(),
+    const meetingDate = new Date(date).toISOString()
+    const { data: newMeeting } = await supabase.from('ca_meetings').insert({
+      title, meeting_date: meetingDate,
       location: location || null, agenda: agenda || null,
-      created_by: profile?.id,
-    })
+      created_by: profile.id,
+    }).select('id').single()
+
+    // Notifier tous les membres CA (sauf le créateur) — non bloquant
+    if (newMeeting?.id) {
+      supabase.functions.invoke('notify-ca-meeting', {
+        body: {
+          meeting_id: newMeeting.id,
+          title,
+          meeting_date: meetingDate,
+          location: location || null,
+          agenda: agenda || null,
+          creator_id: profile.id,
+        },
+      }).catch(console.error)
+    }
+
     setTitle(''); setDate(''); setLocation(''); setAgenda('')
     setShowForm(false)
     await refetch()
