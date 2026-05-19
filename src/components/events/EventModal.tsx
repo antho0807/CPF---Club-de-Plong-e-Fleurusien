@@ -654,8 +654,8 @@ export function EventModal({ event, open, onClose }: Props) {
               </div>
             )}
 
-            {/* ── Demander un exercice de mon niveau ── */}
-            {!canManage && isConfirmed && myRemainingExercises.length > 0 && (
+            {/* ── Demander un exercice de mon niveau (tous les inscrits confirmés) ── */}
+            {isConfirmed && myRemainingExercises.length > 0 && (
               <div className="space-y-2 p-3 rounded-xl border border-blue-100 bg-blue-50/40">
                 <p className="text-xs font-semibold text-[#0077b6] flex items-center gap-1.5">
                   🎯 Demander un exercice à valider
