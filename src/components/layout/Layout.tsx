@@ -5,10 +5,12 @@ import { MobileHeader } from './MobileHeader'
 import { PWABanner } from '../pwa/PWABanner'
 import { PWAGuide } from '../pwa/PWAGuide'
 import { usePWAInstall } from '../../hooks/usePWAInstall'
+import { useAppearance } from '../../hooks/useAppearance'
 
 export function Layout() {
   const location = useLocation()
   const pwa = usePWAInstall()
+  const { mainBgStyle } = useAppearance()
 
   return (
     <div className="flex h-[100dvh] overflow-hidden">
@@ -26,9 +28,7 @@ export function Layout() {
           className="flex-1 overflow-y-auto pb-20 md:pb-0"
           key={location.pathname}
           style={{
-            backgroundImage: "linear-gradient(rgba(8,28,60,0.52),rgba(8,28,60,0.52)),url('/image-plongee.jpg')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            ...mainBgStyle,
             backgroundAttachment: 'local',
             overscrollBehaviorY: 'contain',
           }}

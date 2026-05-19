@@ -73,6 +73,28 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 8px 20px rgba(0,0,0,0.08) !important;
 }
 
+/* ─── Dark mode ─── */
+.dark body { background-color: #0f172a; color: #e2e8f0; }
+.dark .bg-white { background-color: #1e293b !important; }
+.dark .bg-gray-50 { background-color: #1e293b !important; }
+.dark .bg-gray-100 { background-color: #334155 !important; }
+.dark .border-gray-100,
+.dark .border-gray-200 { border-color: #334155 !important; }
+.dark .text-gray-900 { color: #f1f5f9 !important; }
+.dark .text-gray-700 { color: #cbd5e1 !important; }
+.dark .text-gray-600 { color: #94a3b8 !important; }
+.dark .text-gray-500 { color: #64748b !important; }
+.dark .text-gray-400 { color: #475569 !important; }
+.dark .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }
+.dark .shadow-md { box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important; }
+.dark .hover\:bg-gray-50:hover { background-color: #1e293b !important; }
+.dark .divide-gray-100 > * { border-color: #334155 !important; }
+.dark input, .dark textarea, .dark select {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
 /* ─── Animations ─── */
 @keyframes slideUp {
   from { transform: translateY(16px); opacity: 0; }
