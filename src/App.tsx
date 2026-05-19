@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { Layout } from './components/layout/Layout'
@@ -20,9 +20,11 @@ import { GdprConsent } from './components/GdprConsent'
 import { PendingApproval } from './pages/PendingApproval'
 import { Rejected } from './pages/Rejected'
 import { AdminPending } from './pages/admin/AdminPending'
-import { CA } from './pages/CA'
 import { Settings } from './pages/Settings'
 import { Notifications } from './pages/Notifications'
+
+// Lazy loading CA : le code ne se charge QUE si l'utilisateur est CA/admin
+const CA = lazy(() => import('./pages/CA').then(m => ({ default: m.CA })))
 
 function Spinner() {
   return (
@@ -67,6 +69,15 @@ function ProtectedRoute({ children, requireAdmin = false }: { children: React.Re
     return <Navigate to="/calendrier" replace />
   }
 
+  return <>{children}</>
+}
+
+// Accès CA/admin uniquement — redirection immédiate si non autorisé
+// Le composant CA ne monte JAMAIS dans le DOM pour les non-CA
+function ProtectedCARoute({ children }: { children: React.ReactNode }) {
+  const { profile, loading, isCA } = useAuth()
+  if (loading) return <Spinner />
+  if (!isCA || !profile) return <Navigate to="/" replace />
   return <>{children}</>
 }
 
@@ -120,7 +131,13 @@ export default function App() {
           <Route path="objectifs" element={<Objectives />} />
           <Route path="utile" element={<Useful />} />
           <Route path="profil" element={<Profile />} />
-          <Route path="ca" element={<CA />} />
+          <Route path="ca" element={
+            <ProtectedCARoute>
+              <Suspense fallback={<div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-4 border-[#0077b6] border-t-transparent rounded-full" /></div>}>
+                <CA />
+              </Suspense>
+            </ProtectedCARoute>
+          } />
           <Route path="parametres" element={<Settings />} />
           <Route path="notifications" element={<Notifications />} />
         </Route>
