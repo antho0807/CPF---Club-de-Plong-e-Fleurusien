@@ -155,28 +155,33 @@ serve(async (req) => {
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-  // Filtrer les utilisateurs qui ont désactivé ce type de notification
-  let eligibleUserIds = user_ids ?? []
+  // user_ids non fourni = envoyer à tous les abonnés
+  // user_ids fourni = filtrer + vérifier les préférences
+  const targetIds: string[] | null = user_ids?.length ? user_ids : null
   const prefCol = notification_type ? PREF_MAP[notification_type] : null
 
-  if (prefCol && eligibleUserIds.length > 0) {
+  if (targetIds && prefCol) {
     const { data: prefs } = await supabase
       .from('notification_preferences')
       .select(`user_id, ${prefCol}`)
-      .in('user_id', eligibleUserIds)
+      .in('user_id', targetIds)
 
     if (prefs) {
-      // Exclure les users qui ont explicitement désactivé ce type
-      const disabled = new Set(prefs.filter((p: Record<string, unknown>) => p[prefCol] === false).map((p: Record<string, unknown>) => p.user_id as string))
-      eligibleUserIds = eligibleUserIds.filter((id) => !disabled.has(id))
+      const disabled = new Set(
+        prefs
+          .filter((p: Record<string, unknown>) => p[prefCol] === false)
+          .map((p: Record<string, unknown>) => p.user_id as string)
+      )
+      const remaining = targetIds.filter((id) => !disabled.has(id))
+      if (!remaining.length) return new Response(
+        JSON.stringify({ sent: 0, skipped: 'preferences' }),
+        { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } }
+      )
     }
-    // Si un user n'a pas de ligne dans notification_preferences → préférence par défaut = true → inclus
   }
 
-  if (!eligibleUserIds.length) return new Response(JSON.stringify({ sent: 0, skipped: 'preferences' }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } })
-
   let q = supabase.from('push_subscriptions').select('subscription, user_id')
-  if (eligibleUserIds.length) q = q.in('user_id', eligibleUserIds)
+  if (targetIds) q = q.in('user_id', targetIds)
   const { data: subs, error } = await q
 
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } })
