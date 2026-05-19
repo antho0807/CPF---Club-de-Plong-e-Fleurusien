@@ -85,35 +85,35 @@ export function Dashboard() {
       {/* ── VUE ADMIN / MONITEUR ── */}
       {canManage && (
         <>
-          <StatsCards />
-
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Colonne principale */}
             <div className="lg:col-span-2 space-y-5">
 
-              {/* Actions rapides — compact */}
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-1">Actions</span>
-                {isAdmin && (
-                  <Link to="/membres?action=new">
-                    <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs">
-                      <UserPlus className="h-3.5 w-3.5" /> Membre
+              {/* Actions rapides — même largeur que les widgets */}
+              <Card>
+                <CardContent className="p-4 flex flex-wrap gap-2 items-center">
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-1 w-full sm:w-auto">⚡ Actions rapides</span>
+                  {isAdmin && (
+                    <Link to="/membres?action=new" className="flex-1 sm:flex-none">
+                      <Button size="sm" variant="outline" className="gap-1.5 w-full sm:w-auto">
+                        <UserPlus className="h-3.5 w-3.5" /> Membre
+                      </Button>
+                    </Link>
+                  )}
+                  <Link to="/calendrier?action=new" className="flex-1 sm:flex-none">
+                    <Button size="sm" variant="outline" className="gap-1.5 w-full sm:w-auto">
+                      <Plus className="h-3.5 w-3.5" /> Événement
                     </Button>
                   </Link>
-                )}
-                <Link to="/calendrier?action=new">
-                  <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs">
-                    <Plus className="h-3.5 w-3.5" /> Événement
-                  </Button>
-                </Link>
-                {isAdmin && (
-                  <Link to="/sites?action=new">
-                    <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs">
-                      <MapPin className="h-3.5 w-3.5" /> Site
-                    </Button>
-                  </Link>
-                )}
-              </div>
+                  {isAdmin && (
+                    <Link to="/sites?action=new" className="flex-1 sm:flex-none">
+                      <Button size="sm" variant="outline" className="gap-1.5 w-full sm:w-auto">
+                        <MapPin className="h-3.5 w-3.5" /> Site
+                      </Button>
+                    </Link>
+                  )}
+                </CardContent>
+              </Card>
 
               <UpcomingEvents />
             </div>
@@ -124,6 +124,9 @@ export function Dashboard() {
               <ComplianceWidget profile={profile} />
             </div>
           </div>
+
+          {/* KPIs techniques — tout en bas */}
+          <StatsCards />
         </>
       )}
 
