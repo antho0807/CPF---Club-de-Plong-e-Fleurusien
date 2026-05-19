@@ -85,46 +85,43 @@ export function Dashboard() {
       {/* ── VUE ADMIN / MONITEUR ── */}
       {canManage && (
         <>
-          {/* KPIs techniques : membres, médicaux */}
           <StatsCards />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Colonne principale */}
             <div className="lg:col-span-2 space-y-5">
-              <Card>
-                <CardHeader className="pb-3 border-b border-gray-100">
-                  <CardTitle className="text-sm font-semibold text-gray-700">⚡ Actions rapides</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-3 flex flex-wrap gap-2">
-                  {isAdmin && (
-                    <Link to="/membres?action=new">
-                      <Button size="sm" className="gap-2">
-                        <UserPlus className="h-4 w-4" /> Ajouter un membre
-                      </Button>
-                    </Link>
-                  )}
-                  <Link to="/calendrier?action=new">
-                    <Button size="sm" variant="outline" className="gap-2">
-                      <Plus className="h-4 w-4" /> Créer un événement
+
+              {/* Actions rapides — compact */}
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-1">Actions</span>
+                {isAdmin && (
+                  <Link to="/membres?action=new">
+                    <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs">
+                      <UserPlus className="h-3.5 w-3.5" /> Membre
                     </Button>
                   </Link>
-                  {isAdmin && (
-                    <Link to="/sites?action=new">
-                      <Button size="sm" variant="outline" className="gap-2">
-                        <MapPin className="h-4 w-4" /> Ajouter un site
-                      </Button>
-                    </Link>
-                  )}
-                </CardContent>
-              </Card>
+                )}
+                <Link to="/calendrier?action=new">
+                  <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs">
+                    <Plus className="h-3.5 w-3.5" /> Événement
+                  </Button>
+                </Link>
+                {isAdmin && (
+                  <Link to="/sites?action=new">
+                    <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs">
+                      <MapPin className="h-3.5 w-3.5" /> Site
+                    </Button>
+                  </Link>
+                )}
+              </div>
+
               <UpcomingEvents />
-              <ExternalEvents />
             </div>
 
             {/* Colonne latérale admin */}
             <div className="space-y-5">
-              <ComplianceWidget profile={profile} />
               <ObjectivesWidget />
+              <ComplianceWidget profile={profile} />
             </div>
           </div>
         </>
@@ -133,19 +130,18 @@ export function Dashboard() {
       {/* ── VUE MEMBRE ── */}
       {!canManage && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Colonne principale */}
           <div className="lg:col-span-2 space-y-5">
             <UpcomingEvents />
-            <ExternalEvents />
           </div>
-
-          {/* Colonne latérale membre */}
           <div className="space-y-5">
             <ObjectivesWidget />
             <MemberProfileCard />
           </div>
         </div>
       )}
+
+      {/* ── Événements plongée utiles — visible pour tous, toujours en dernier ── */}
+      <ExternalEvents />
 
     </div>
   )
