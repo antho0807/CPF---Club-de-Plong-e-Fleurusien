@@ -15,9 +15,9 @@ export function Settings() {
       </div>
 
       <Tabs defaultValue="notifications">
-        <TabsList className="w-full">
-          <TabsTrigger value="notifications" className="flex-1">🔔 Notifications</TabsTrigger>
-          <TabsTrigger value="account" className="flex-1">👤 Mon compte</TabsTrigger>
+        <TabsList className="flex-wrap h-auto gap-1 mb-4">
+          <TabsTrigger value="notifications">🔔 Notifications</TabsTrigger>
+          <TabsTrigger value="account">👤 Mon compte</TabsTrigger>
         </TabsList>
         <TabsContent value="notifications" className="pt-4">
           <NotificationsTab />
