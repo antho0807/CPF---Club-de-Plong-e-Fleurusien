@@ -1,124 +1,109 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { useMembers } from '../../hooks/useMembers'
 import { supabase } from '../../lib/supabase'
+import { MemberForm } from '../../components/members/MemberForm'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Button } from '../../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { FileText } from 'lucide-react'
 
 export function AccountTab() {
   const { profile, refreshProfile, signOut } = useAuth()
-
-  const [alias, setAlias] = useState(profile?.alias ?? '')
-  const [aliasLoading, setAliasLoading] = useState(false)
-  const [aliasMsg, setAliasMsg] = useState<string | null>(null)
+  const { updateMember } = useMembers()
 
   const [newEmail, setNewEmail] = useState('')
   const [emailLoading, setEmailLoading] = useState(false)
   const [emailMsg, setEmailMsg] = useState<string | null>(null)
 
-  const [currentPwd, setCurrentPwd] = useState('')
-  const [newPwd, setNewPwd] = useState('')
-  const [pwdLoading, setPwdLoading] = useState(false)
-  const [pwdMsg, setPwdMsg] = useState<string | null>(null)
-
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  async function handleAlias() {
-    if (!profile) return
-    setAliasLoading(true); setAliasMsg(null)
-    const { error } = await supabase.from('profiles').update({ alias: alias.trim() || null }).eq('id', profile.id)
-    if (error) { setAliasMsg('Erreur : ' + error.message) }
-    else { await refreshProfile(); setAliasMsg('Pseudo mis à jour.') }
-    setAliasLoading(false)
-  }
-
-  async function handleEmail() {
+  async function handleEmailChange() {
     if (!newEmail.trim()) return
     setEmailLoading(true); setEmailMsg(null)
     const { error } = await supabase.auth.updateUser({ email: newEmail.trim() })
     if (error) { setEmailMsg('Erreur : ' + error.message) }
-    else { setEmailMsg('Un email de confirmation a été envoyé à ' + newEmail + '.') }
+    else { setEmailMsg('Un email de confirmation a été envoyé à ' + newEmail) }
     setEmailLoading(false)
   }
 
-  async function handlePassword() {
-    if (!newPwd || newPwd.length < 8) { setPwdMsg('Le mot de passe doit faire au moins 8 caractères.'); return }
-    setPwdLoading(true); setPwdMsg(null)
-    const { error } = await supabase.auth.updateUser({ password: newPwd })
-    if (error) { setPwdMsg('Erreur : ' + error.message) }
-    else { setPwdMsg('Mot de passe mis à jour.'); setCurrentPwd(''); setNewPwd('') }
-    setPwdLoading(false)
-  }
+  if (!profile) return null
 
   return (
-    <div className="space-y-8">
-      {/* Alias */}
-      <div className="bg-white rounded-xl border border-gray-100 p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Pseudo / Alias</h2>
-        <div className="space-y-3">
-          <div>
-            <Label>Votre pseudo affiché dans l'app</Label>
-            <Input className="mt-1" value={alias} onChange={(e) => setAlias(e.target.value)} placeholder={profile?.full_name} />
-            <p className="text-xs text-gray-400 mt-1">Laissez vide pour afficher votre nom complet.</p>
-          </div>
-          {aliasMsg && <p className={`text-sm ${aliasMsg.startsWith('Erreur') ? 'text-red-600' : 'text-green-600'}`}>{aliasMsg}</p>}
-          <Button size="sm" onClick={handleAlias} disabled={aliasLoading}>
-            {aliasLoading ? 'Enregistrement…' : 'Enregistrer'}
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-6">
 
-      {/* Email */}
-      <div className="bg-white rounded-xl border border-gray-100 p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-1">Adresse email</h2>
-        <p className="text-xs text-gray-400 mb-4">Email actuel : <strong>{profile?.email}</strong></p>
-        <div className="space-y-3">
+      {/* Formulaire profil complet */}
+      <Card>
+        <CardHeader className="pb-3 border-b border-gray-100">
+          <CardTitle className="text-sm font-semibold text-gray-700">👤 Mon profil</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <MemberForm
+            initial={profile}
+            isAdmin={false}
+            onSubmit={async (data) => {
+              await updateMember(profile.id, data)
+              await refreshProfile()
+            }}
+            onCancel={() => {}}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Lien vers documents / conformité */}
+      <Link to="/profil">
+        <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors cursor-pointer">
+          <FileText className="h-5 w-5 text-[#0077b6] flex-shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-[#0077b6]">Mes documents & conformité</p>
+            <p className="text-xs text-blue-500">Certificat médical, carte LIFRAS, avatar…</p>
+          </div>
+        </div>
+      </Link>
+
+      {/* Changer l'email */}
+      <Card>
+        <CardHeader className="pb-3 border-b border-gray-100">
+          <CardTitle className="text-sm font-semibold text-gray-700">✉️ Changer d'adresse email</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-3">
+          <p className="text-xs text-gray-400">Email actuel : <strong>{profile.email}</strong></p>
           <div>
             <Label>Nouvel email</Label>
             <Input className="mt-1" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="nouveau@email.com" />
           </div>
           {emailMsg && <p className={`text-sm ${emailMsg.startsWith('Erreur') ? 'text-red-600' : 'text-green-600'}`}>{emailMsg}</p>}
-          <Button size="sm" onClick={handleEmail} disabled={emailLoading || !newEmail.trim()}>
+          <Button size="sm" onClick={handleEmailChange} disabled={emailLoading || !newEmail.trim()}>
             {emailLoading ? 'Envoi…' : 'Changer l\'email'}
           </Button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Mot de passe */}
-      <div className="bg-white rounded-xl border border-gray-100 p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Mot de passe</h2>
-        <div className="space-y-3">
-          <div>
-            <Label>Nouveau mot de passe</Label>
-            <Input className="mt-1" type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} placeholder="8 caractères minimum" />
-          </div>
-          {pwdMsg && <p className={`text-sm ${pwdMsg.startsWith('Erreur') ? 'text-red-600' : 'text-green-600'}`}>{pwdMsg}</p>}
-          <Button size="sm" onClick={handlePassword} disabled={pwdLoading || !newPwd}>
-            {pwdLoading ? 'Mise à jour…' : 'Changer le mot de passe'}
-          </Button>
-        </div>
-      </div>
-
-      {/* Supprimer le compte */}
-      <div className="bg-red-50 rounded-xl border border-red-100 p-5">
-        <h2 className="text-sm font-semibold text-red-700 mb-2">Zone de danger</h2>
-        {!confirmDelete ? (
-          <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => setConfirmDelete(true)}>
-            Supprimer mon compte
-          </Button>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-red-700">Êtes-vous sûr ? Cette action est irréversible et supprimera toutes vos données.</p>
-            <div className="flex gap-3">
-              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={signOut}>
-                Confirmer et se déconnecter
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setConfirmDelete(false)}>Annuler</Button>
+      {/* Zone danger */}
+      <Card className="border-red-100 bg-red-50">
+        <CardHeader className="pb-3 border-b border-red-100">
+          <CardTitle className="text-sm font-semibold text-red-700">⚠️ Zone de danger</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          {!confirmDelete ? (
+            <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => setConfirmDelete(true)}>
+              Supprimer mon compte
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-red-700">Cette action est irréversible et supprimera toutes vos données.</p>
+              <div className="flex gap-3">
+                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={signOut}>Confirmer</Button>
+                <Button size="sm" variant="outline" onClick={() => setConfirmDelete(false)}>Annuler</Button>
+              </div>
+              <p className="text-xs text-red-400">Contactez l'administrateur pour supprimer définitivement votre compte.</p>
             </div>
-            <p className="text-xs text-red-400">Contactez l'administrateur pour supprimer définitivement votre compte.</p>
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
+
     </div>
   )
 }

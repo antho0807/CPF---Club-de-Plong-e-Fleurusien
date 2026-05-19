@@ -3,6 +3,7 @@ import { Settings as SettingsIcon } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { NotificationsTab } from './settings/NotificationsTab'
 import { AccountTab } from './settings/AccountTab'
+import { SecurityTab } from './settings/SecurityTab'
 
 export function Settings() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -14,20 +15,24 @@ export function Settings() {
         <SettingsIcon className="h-6 w-6 text-gray-600" />
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Paramètres</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Compte, notifications et préférences</p>
+          <p className="text-sm text-gray-500 mt-0.5">Compte, notifications et sécurité</p>
         </div>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setSearchParams({ tab: v })}>
         <TabsList className="flex-wrap h-auto gap-1 mb-4">
-          <TabsTrigger value="account">Mon compte</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="account">👤 Mon compte</TabsTrigger>
+          <TabsTrigger value="notifications">🔔 Notifications</TabsTrigger>
+          <TabsTrigger value="security">🔒 Sécurité</TabsTrigger>
         </TabsList>
-        <TabsContent value="account" className="pt-4">
+        <TabsContent value="account" className="pt-2">
           <AccountTab />
         </TabsContent>
-        <TabsContent value="notifications" className="pt-4">
+        <TabsContent value="notifications" className="pt-2">
           <NotificationsTab />
+        </TabsContent>
+        <TabsContent value="security" className="pt-2">
+          <SecurityTab />
         </TabsContent>
       </Tabs>
     </div>
