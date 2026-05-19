@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Dark mode basé sur la CLASSE .dark (pas la préférence système)
+   Cela permet à nos dark: utilities Tailwind de suivre le choix de l'utilisateur */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #0077b6;
   --color-primary-dark: #005f8e;
