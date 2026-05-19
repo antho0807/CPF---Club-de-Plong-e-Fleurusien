@@ -124,6 +124,7 @@ export function Dashboard() {
             {/* Colonne latérale admin */}
             <div className="space-y-5">
               <ComplianceWidget profile={profile} />
+              <ObjectivesWidget />
             </div>
           </div>
         </>
@@ -142,24 +143,6 @@ export function Dashboard() {
           <div className="space-y-5">
             <MemberProfileCard />
             <ObjectivesWidget />
-            <Card className="border-blue-100 bg-blue-50/40">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#0077b6]/10 flex items-center justify-center">
-                    <Target className="h-5 w-5 text-[#0077b6]" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm text-gray-900">Mes objectifs</p>
-                    <p className="text-xs text-gray-500">Progressez vers votre prochain brevet</p>
-                  </div>
-                </div>
-                <Link to="/objectifs">
-                  <Button variant="ghost" size="sm" className="gap-1 text-[#0077b6]">
-                    Voir <ChevronRight className="h-3 w-3" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
           </div>
         </div>
       )}
