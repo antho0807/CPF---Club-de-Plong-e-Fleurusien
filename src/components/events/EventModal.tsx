@@ -97,8 +97,9 @@ export function EventModal({ event, open, onClose }: Props) {
   )
   const { messages, sendMessage } = useEventMessages(event?.id ?? null)
 
-  const { remaining: myRemainingExercises } = useMyObjectivesProgress(profile?.id, profile?.brevet_level)
+  const { remaining: myRemainingExercises, objectifs: myObjectifs } = useMyObjectivesProgress(profile?.id, profile?.brevet_level)
   const [requestingEx, setRequestingEx] = useState<string | null>(null)
+  const [selectedExId, setSelectedExId] = useState<string>('')
 
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -653,48 +654,68 @@ export function EventModal({ event, open, onClose }: Props) {
               </div>
             )}
 
-            {/* ── Mes exercices à valider (depuis les objectifs perso) ── */}
+            {/* ── Demander un exercice de mon niveau ── */}
             {!canManage && isConfirmed && myRemainingExercises.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
-                  🎯 Mes exercices à valider
-                  <span className="text-gray-300 font-normal normal-case">— demande à l'organisateur</span>
+              <div className="space-y-2 p-3 rounded-xl border border-blue-100 bg-blue-50/40">
+                <p className="text-xs font-semibold text-[#0077b6] flex items-center gap-1.5">
+                  🎯 Demander un exercice à valider
+                  {myObjectifs && <span className="text-blue-300 font-normal">— {myObjectifs.label.replace('Objectifs pour obtenir ', 'vers ')}</span>}
                 </p>
-                {myRemainingExercises.map(ex => (
-                  <div key={ex.id} className="flex items-center gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/40">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 leading-snug">{ex.label}</p>
-                      {ex.detail && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{ex.detail}</p>}
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={requestingEx === ex.id}
-                      className="h-7 px-2.5 text-xs shrink-0 text-[#0077b6] border-blue-200 hover:bg-blue-50"
-                      onClick={async () => {
-                        if (!profile || !ev.id) return
-                        setRequestingEx(ex.id)
-                        const name = profile.alias || profile.full_name.split(' ')[0]
-                        // Message visible dans le chat de l'événement
-                        await sendMessage(memberId, `📋 Demande d'exercice : "${ex.label}"`)
-                        // Notification directe à l'organisateur
-                        const orgId = ev.organizer_id ?? ev.created_by
-                        if (orgId) {
-                          await createNotification({
-                            userId: orgId,
-                            type: 'new_message',
-                            title: '📋 Demande d\'exercice',
-                            body: `${name} demande à pratiquer "${ex.label}" lors de « ${ev.title} ».`,
-                            data: { eventId: ev.id },
-                          })
-                        }
-                        setRequestingEx(null)
-                      }}
-                    >
-                      {requestingEx === ex.id ? '…' : 'Demander'}
-                    </Button>
-                  </div>
-                ))}
+
+                <div className="flex gap-2">
+                  <Select value={selectedExId} onValueChange={setSelectedExId}>
+                    <SelectTrigger className="flex-1 text-xs h-8">
+                      <SelectValue placeholder="Choisir un exercice…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {myObjectifs?.categories.map(cat => (
+                        <div key={cat.id}>
+                          <div className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{cat.label}</div>
+                          {cat.exercices
+                            .filter(ex => myRemainingExercises.some(r => r.id === ex.id))
+                            .map(ex => (
+                              <SelectItem key={ex.id} value={ex.id} className="text-xs">{ex.label}</SelectItem>
+                            ))}
+                        </div>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    size="sm"
+                    className="h-8 px-3 text-xs shrink-0 gap-1"
+                    disabled={!selectedExId || !!requestingEx}
+                    onClick={async () => {
+                      if (!profile || !ev.id || !selectedExId) return
+                      const ex = myRemainingExercises.find(e => e.id === selectedExId)
+                      if (!ex) return
+                      setRequestingEx(selectedExId)
+                      const name = profile.alias || profile.full_name.split(' ')[0]
+                      await sendMessage(memberId, `📋 Demande d'exercice officiel : "${ex.label}"`)
+                      const orgId = ev.organizer_id ?? ev.created_by
+                      if (orgId) {
+                        await createNotification({
+                          userId: orgId,
+                          type: 'new_message',
+                          title: '📋 Demande d\'exercice',
+                          body: `${name} demande à valider "${ex.label}" lors de « ${ev.title} ».`,
+                          data: { eventId: ev.id },
+                        })
+                      }
+                      setSelectedExId('')
+                      setRequestingEx(null)
+                    }}
+                  >
+                    {requestingEx ? '…' : 'Envoyer'}
+                  </Button>
+                </div>
+
+                {selectedExId && (() => {
+                  const ex = myRemainingExercises.find(e => e.id === selectedExId)
+                  return ex?.detail ? (
+                    <p className="text-xs text-gray-500 italic">{ex.detail}</p>
+                  ) : null
+                })()}
               </div>
             )}
 

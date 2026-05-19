@@ -73,27 +73,78 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 8px 20px rgba(0,0,0,0.08) !important;
 }
 
-/* ─── Dark mode ─── */
-.dark body { background-color: #0f172a; color: #e2e8f0; }
-.dark .bg-white { background-color: #1e293b !important; }
-.dark .bg-gray-50 { background-color: #1e293b !important; }
-.dark .bg-gray-100 { background-color: #334155 !important; }
+/* ─── Dark mode — complet ─── */
+
+/* Base */
+.dark body               { background-color: #0f172a; color: #e2e8f0; }
+
+/* Surfaces */
+.dark .bg-white          { background-color: #1e293b !important; }
+.dark .bg-gray-50        { background-color: #1a2744 !important; }
+.dark .bg-gray-100       { background-color: #243555 !important; }
+.dark .bg-gray-200       { background-color: #2d3f66 !important; }
+.dark .bg-blue-50,
+.dark .bg-blue-50\/40,
+.dark .bg-blue-50\/60    { background-color: rgba(30, 58, 138, 0.2) !important; }
+.dark .bg-red-50         { background-color: rgba(127, 29, 29, 0.25) !important; }
+.dark .bg-green-50       { background-color: rgba(20, 83, 45, 0.25) !important; }
+.dark .bg-orange-50      { background-color: rgba(120, 53, 15, 0.25) !important; }
+.dark .bg-amber-50       { background-color: rgba(120, 80, 0, 0.2) !important; }
+.dark .bg-teal-50        { background-color: rgba(17, 94, 89, 0.2) !important; }
+
+/* Textes */
+.dark .text-gray-900     { color: #f1f5f9 !important; }
+.dark .text-gray-800     { color: #e2e8f0 !important; }
+.dark .text-gray-700     { color: #cbd5e1 !important; }
+.dark .text-gray-600     { color: #94a3b8 !important; }
+.dark .text-gray-500     { color: #64748b !important; }
+.dark .text-gray-400     { color: #475569 !important; }
+.dark .text-gray-300     { color: #334155 !important; }
+
+/* Bordures */
+.dark .border-gray-50,
 .dark .border-gray-100,
-.dark .border-gray-200 { border-color: #334155 !important; }
-.dark .text-gray-900 { color: #f1f5f9 !important; }
-.dark .text-gray-700 { color: #cbd5e1 !important; }
-.dark .text-gray-600 { color: #94a3b8 !important; }
-.dark .text-gray-500 { color: #64748b !important; }
-.dark .text-gray-400 { color: #475569 !important; }
-.dark .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }
-.dark .shadow-md { box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important; }
-.dark .hover\:bg-gray-50:hover { background-color: #1e293b !important; }
-.dark .divide-gray-100 > * { border-color: #334155 !important; }
-.dark input, .dark textarea, .dark select {
+.dark .border-gray-200   { border-color: #1e3a5f !important; }
+.dark .divide-gray-50 > *,
+.dark .divide-gray-100 > *,
+.dark .divide-gray-200 > * { border-color: #1e3a5f !important; }
+.dark .border-white\/20  { border-color: rgba(255,255,255,0.1) !important; }
+
+/* Hover */
+.dark .hover\:bg-gray-50:hover  { background-color: #243555 !important; }
+.dark .hover\:bg-gray-100:hover { background-color: #2d3f66 !important; }
+.dark .active\:bg-gray-100:active { background-color: #2d3f66 !important; }
+
+/* Ombres */
+.dark .shadow-sm  { box-shadow: 0 1px 3px rgba(0,0,0,0.5)  !important; }
+.dark .shadow-md  { box-shadow: 0 4px 12px rgba(0,0,0,0.6) !important; }
+.dark .shadow-xl  { box-shadow: 0 8px 24px rgba(0,0,0,0.7) !important; }
+.dark .shadow-2xl { box-shadow: 0 16px 40px rgba(0,0,0,0.8) !important; }
+
+/* Formulaires */
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark textarea,
+.dark select {
   background-color: #1e293b !important;
-  border-color: #334155 !important;
+  border-color: #1e3a5f !important;
   color: #e2e8f0 !important;
 }
+.dark input::placeholder,
+.dark textarea::placeholder { color: #475569 !important; }
+
+/* Boutons outline */
+.dark .border-gray-300 { border-color: #1e3a5f !important; }
+
+/* Navigation / BottomNav bottom sheet */
+.dark [data-bottom-sheet],
+.dark .bg-white.rounded-t-\[20px\] { background-color: #0f2040 !important; }
+
+/* Tabs */
+.dark .bg-gray-50.p-0\.5 { background-color: #1a2744 !important; }
+
+/* Scrollbar */
+.dark ::-webkit-scrollbar-track { background: #0f172a; }
+.dark ::-webkit-scrollbar-thumb { background: #334155; }
 
 /* ─── Animations ─── */
 @keyframes slideUp {

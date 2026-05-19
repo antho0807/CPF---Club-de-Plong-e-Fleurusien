@@ -109,7 +109,8 @@ export function BottomNav() {
 
           {/* Sheet */}
           <div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[20px] shadow-2xl overflow-hidden"
+            data-bottom-sheet=""
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[20px] shadow-2xl overflow-hidden dark:bg-[#0f2040]"
             style={{
               maxHeight: '80vh',
               animation: 'slideUpSheet 0.3s ease-out',
