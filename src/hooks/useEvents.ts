@@ -59,6 +59,19 @@ export function useEvents() {
       })
     }
 
+    // Notifier tous les membres actifs (sauf le créateur) — non bloquant
+    const dateStr = insertable.date_start
+      ? shortDate(insertable.date_start as string)
+      : ''
+    supabase.functions.invoke('send-push-notification', {
+      body: {
+        notification_type: 'new_event',
+        exclude_user_id: insertable.created_by,
+        title: '📅 Nouvel événement',
+        body: `${insertable.title ?? 'Événement'} ${dateStr ? `— ${dateStr}` : ''}`.trim(),
+      },
+    }).catch(console.error)
+
     await refetch()
   }
 

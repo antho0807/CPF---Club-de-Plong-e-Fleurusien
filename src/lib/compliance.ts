@@ -154,22 +154,24 @@ export function getRegistrationBlock(
  *   - en dessous de P3★ → non
  */
 export function canCreateAnyEvent(role: UserRole, brevet: BrevetLevel | null): boolean {
-  if (role === 'admin' || role === 'moniteur') return true
+  if (role === 'admin') return true
+  if (role === 'externe') return false
+  // Moniteur = brevet, pas rôle. P2★ et au-dessus peuvent créer des events.
+  if (role === 'moniteur') return true // rétrocompatibilité données existantes
   if (!brevet) return false
-  return BREVET_ORDER[brevet] >= BREVET_ORDER['3_etoiles']
+  return BREVET_ORDER[brevet] >= BREVET_ORDER['2_etoiles']
 }
 
 /**
  * Renvoie les types d'événements qu'un membre est autorisé à créer.
  */
 export function getCreatableEventTypes(role: UserRole, brevet: BrevetLevel | null): EventType[] {
-  const ALL: EventType[] = ['sortie_mer', 'sortie_lac', 'sortie_carriere', 'entrainement_piscine', 'formation', 'competition', 'reunion', 'autre']
+  const ALL: EventType[] = ['sortie_mer', 'sortie_lac', 'sortie_carriere', 'entrainement_piscine', 'formation', 'competition', 'reunion', 'social', 'voyage', 'autre']
   if (role === 'admin' || role === 'moniteur') return ALL
 
   const order = brevet ? BREVET_ORDER[brevet] : -1
 
-  if (order >= BREVET_ORDER['3_etoiles']) return ALL
-  if (order >= BREVET_ORDER['2_etoiles']) return [...TRAINING_TYPES, 'reunion', 'autre']
+  if (order >= BREVET_ORDER['2_etoiles']) return ALL
   return ['reunion', 'autre']
 }
 

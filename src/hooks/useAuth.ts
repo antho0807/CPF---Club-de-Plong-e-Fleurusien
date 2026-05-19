@@ -97,7 +97,10 @@ export function useAuth() {
   }
 
   const isAdmin = profile?.role === 'admin'
-  const isMoniteur = profile?.role === 'moniteur' || isAdmin
+  // Moniteur = brevet LIFRAS, pas un rôle. Compatibilité avec l'ancien rôle + brevet.
+  const isMoniteur = isAdmin
+    || profile?.role === 'moniteur' // rétrocompatibilité
+    || ['moniteur_club', 'moniteur_federal', 'instructeur'].includes(profile?.brevet_level ?? '')
   const isExterne = profile?.role === 'externe'
   const isMembre = !!profile
   const isApproved = profile?.status === 'approved'

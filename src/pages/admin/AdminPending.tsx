@@ -22,12 +22,6 @@ const ROLE_OPTIONS: { value: UserRole; label: string; description: string; color
     color: 'bg-blue-50 text-blue-700 border-blue-200',
   },
   {
-    value: 'moniteur',
-    label: 'Moniteur',
-    description: 'Gestion des événements et des inscriptions',
-    color: 'bg-teal-50 text-teal-700 border-teal-200',
-  },
-  {
     value: 'admin',
     label: 'Administrateur',
     description: 'Accès total — gestion des membres, CA, approbations',

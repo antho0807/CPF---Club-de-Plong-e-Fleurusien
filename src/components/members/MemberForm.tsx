@@ -150,7 +150,6 @@ export function MemberForm({ initial, onSubmit, onCancel, isAdmin = false }: Pro
               <SelectContent>
                 <SelectItem value="externe">Membre externe</SelectItem>
                 <SelectItem value="membre">Membre effectif</SelectItem>
-                <SelectItem value="moniteur">Moniteur</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
             </Select>

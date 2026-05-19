@@ -7,7 +7,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 interface PushSub { endpoint: string; keys: { p256dh: string; auth: string } }
-interface Payload  { user_ids?: string[]; notification_type?: string; title: string; body: string; url?: string }
+interface Payload  { user_ids?: string[]; notification_type?: string; exclude_user_id?: string; title: string; body: string; url?: string }
 
 // Mapping type de notification → colonne dans notification_preferences
 const PREF_MAP: Record<string, string> = {
@@ -151,13 +151,30 @@ const CORS = {
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
-  const { user_ids, notification_type, title, body, url }: Payload = await req.json()
+  const { user_ids, notification_type, exclude_user_id, title, body, url }: Payload = await req.json()
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-  // user_ids non fourni = envoyer à tous les abonnés
+  // user_ids non fourni = envoyer à tous les abonnés actifs
   // user_ids fourni = filtrer + vérifier les préférences
-  const targetIds: string[] | null = user_ids?.length ? user_ids : null
+  let targetIds: string[] | null = user_ids?.length ? user_ids : null
+
+  // Si pas de user_ids explicites, récupérer tous les membres actifs approuvés
+  if (!targetIds) {
+    const { data: activeMembers } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_active', true)
+      .eq('status', 'approved')
+    if (activeMembers?.length) {
+      targetIds = activeMembers.map((m: { id: string }) => m.id)
+    }
+  }
+
+  // Exclure l'utilisateur spécifié (ex : le créateur d'un événement)
+  if (exclude_user_id && targetIds) {
+    targetIds = targetIds.filter(id => id !== exclude_user_id)
+  }
   const prefCol = notification_type ? PREF_MAP[notification_type] : null
 
   if (targetIds && prefCol) {
