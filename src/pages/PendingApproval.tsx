@@ -5,6 +5,16 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { Button } from '../components/ui/button'
 
+// Notifie les admins une seule fois à la première visite de cette page
+async function notifyAdminsOnce(profileId: string, fullName: string) {
+  const key = `admin_notified_${profileId}`
+  if (localStorage.getItem(key)) return
+  await supabase.functions.invoke('notify-admins-new-member', {
+    body: { member_id: profileId, member_name: fullName },
+  }).catch(console.error)
+  localStorage.setItem(key, 'true')
+}
+
 type StatusResult = 'pending' | 'approved' | 'rejected' | 'error' | null
 
 export function PendingApproval() {
@@ -12,6 +22,13 @@ export function PendingApproval() {
   const navigate = useNavigate()
   const [checking, setChecking] = useState(false)
   const [result, setResult] = useState<StatusResult>(null)
+
+  // Notifier les admins dès l'arrivée sur cette page (une seule fois)
+  useEffect(() => {
+    if (profile?.id && profile?.full_name) {
+      notifyAdminsOnce(profile.id, profile.full_name)
+    }
+  }, [profile?.id, profile?.full_name])
 
   const handleVerify = useCallback(async () => {
     if (!profile?.id || checking) return
