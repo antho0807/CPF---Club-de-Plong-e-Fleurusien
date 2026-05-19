@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Calendar, MapPin, Info, LogOut, User,
+  LayoutDashboard, Calendar, MapPin, Info, LogOut,
   ShieldCheck, Target, Lightbulb, Briefcase, Settings,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
+import { AvatarDisplay } from '../members/AvatarDisplay'
 import { cn } from '../../lib/utils'
 
 const navItems = [
@@ -113,7 +114,12 @@ export function Navbar({ onClose }: NavbarProps = {}) {
           to="/parametres?tab=account"
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors"
         >
-          <User className="h-5 w-5" />
+          <AvatarDisplay
+            avatarUrl={profile?.avatar_url}
+            name={profile?.full_name ?? ''}
+            size="sm"
+            className="border-2 border-white/30"
+          />
           <div className="overflow-hidden">
             <p className="truncate text-white font-semibold">{profile?.alias || profile?.full_name}</p>
             <p className="text-xs text-blue-200 capitalize">{profile?.role}</p>

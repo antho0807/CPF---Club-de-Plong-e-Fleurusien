@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useMembers } from '../../hooks/useMembers'
 import { supabase } from '../../lib/supabase'
 import { MemberForm } from '../../components/members/MemberForm'
+import { AvatarUpload } from '../../components/members/AvatarUpload'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Button } from '../../components/ui/button'
@@ -38,6 +39,21 @@ export function AccountTab() {
 
   return (
     <div className="space-y-6">
+
+      {/* Photo de profil */}
+      <Card>
+        <CardHeader className="pb-3 border-b border-gray-100">
+          <CardTitle className="text-sm font-semibold text-gray-700">🖼️ Photo de profil</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4 flex justify-center">
+          <AvatarUpload
+            userId={profile.id}
+            name={profile.full_name}
+            currentUrl={profile.avatar_url}
+            onUploaded={async () => { await refreshProfile() }}
+          />
+        </CardContent>
+      </Card>
 
       {/* Formulaire profil complet */}
       <Card>

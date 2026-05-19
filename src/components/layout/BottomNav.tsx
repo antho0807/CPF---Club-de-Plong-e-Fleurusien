@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Calendar, Briefcase, MoreHorizontal,
-  User, Settings, Info, FileText, Bell, Users, ShieldCheck,
+  Settings, Info, FileText, Bell, Users, ShieldCheck,
   LogOut, ChevronRight,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
@@ -126,7 +126,10 @@ export function BottomNav() {
             <div className="overflow-y-auto" style={{ maxHeight: 'calc(80vh - 24px)' }}>
               {/* ── Bloc profil ── */}
               {profile && (
-                <div className="flex items-center gap-3 px-5 py-4">
+                <button
+                  onClick={() => navigate_and_close('/parametres?tab=account')}
+                  className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left"
+                >
                   <AvatarDisplay
                     avatarUrl={profile.avatar_url}
                     name={profile.full_name}
@@ -138,7 +141,8 @@ export function BottomNav() {
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">{displayRole}</p>
                   </div>
-                </div>
+                  <ChevronRight className="h-4 w-4 text-gray-300 flex-shrink-0" />
+                </button>
               )}
 
               {/* ── Séparateur ── */}
@@ -146,7 +150,6 @@ export function BottomNav() {
 
               {/* ── Navigation principale ── */}
               <div className="py-1.5">
-                <SheetItem icon={User} label="Mon profil" to="/parametres?tab=account" onNav={navigate_and_close} />
                 <SheetItem icon={Settings} label="Paramètres" to="/parametres" onNav={navigate_and_close} />
                 <SheetItem icon={Info} label="Le Club" to="/club" onNav={navigate_and_close} />
                 {!isExterne && (
@@ -155,7 +158,7 @@ export function BottomNav() {
                 <SheetItem
                   icon={Bell}
                   label="Notifications"
-                  to="/parametres?tab=notifications"
+                  to="/notifications"
                   onNav={navigate_and_close}
                   badge={unreadCount}
                 />
