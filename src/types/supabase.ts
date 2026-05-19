@@ -209,6 +209,36 @@ export interface Database {
         }
         Relationships: []
       }
+      ca_meetings: {
+        Row: { id: string; title: string; meeting_date: string; location: string | null; agenda: string | null; minutes: string | null; status: 'planned' | 'in_progress' | 'completed' | 'cancelled'; created_by: string | null; created_at: string }
+        Insert: { id?: string; title: string; meeting_date: string; location?: string | null; agenda?: string | null; minutes?: string | null; status?: 'planned' | 'in_progress' | 'completed' | 'cancelled'; created_by?: string | null }
+        Update: { title?: string; meeting_date?: string; location?: string | null; agenda?: string | null; minutes?: string | null; status?: 'planned' | 'in_progress' | 'completed' | 'cancelled' }
+        Relationships: []
+      }
+      ca_meeting_attendees: {
+        Row: { id: string; meeting_id: string; member_id: string; present: boolean }
+        Insert: { id?: string; meeting_id: string; member_id: string; present?: boolean }
+        Update: { present?: boolean }
+        Relationships: []
+      }
+      ca_votes: {
+        Row: { id: string; title: string; description: string | null; meeting_id: string | null; deadline: string | null; status: 'open' | 'closed' | 'cancelled'; quorum_required: number; created_by: string | null; created_at: string }
+        Insert: { id?: string; title: string; description?: string | null; meeting_id?: string | null; deadline?: string | null; status?: 'open' | 'closed' | 'cancelled'; quorum_required?: number; created_by?: string | null }
+        Update: { title?: string; description?: string | null; status?: 'open' | 'closed' | 'cancelled'; deadline?: string | null }
+        Relationships: []
+      }
+      ca_vote_responses: {
+        Row: { id: string; vote_id: string; member_id: string; response: 'yes' | 'no' | 'abstain'; comment: string | null; created_at: string }
+        Insert: { id?: string; vote_id: string; member_id: string; response: 'yes' | 'no' | 'abstain'; comment?: string | null }
+        Update: { response?: 'yes' | 'no' | 'abstain'; comment?: string | null }
+        Relationships: []
+      }
+      ca_documents: {
+        Row: { id: string; title: string; category: 'pv' | 'statuts' | 'contrat' | 'finance' | 'rapport' | 'autre'; storage_path: string; file_name: string; file_size: number | null; meeting_id: string | null; uploaded_by: string | null; created_at: string }
+        Insert: { id?: string; title: string; category?: 'pv' | 'statuts' | 'contrat' | 'finance' | 'rapport' | 'autre'; storage_path: string; file_name: string; file_size?: number | null; meeting_id?: string | null; uploaded_by?: string | null }
+        Update: { title?: string; category?: 'pv' | 'statuts' | 'contrat' | 'finance' | 'rapport' | 'autre' }
+        Relationships: []
+      }
       member_documents: {
         Row: {
           id: string

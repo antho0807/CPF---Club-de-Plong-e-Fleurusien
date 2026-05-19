@@ -223,6 +223,49 @@ export interface CAStockMovement {
   profiles?: Pick<Profile, 'full_name' | 'alias'>
 }
 
+export type MeetingStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled'
+export type VoteResponse = 'yes' | 'no' | 'abstain'
+export type DocumentCategory = 'pv' | 'statuts' | 'contrat' | 'finance' | 'rapport' | 'autre'
+
+export interface CAMeeting {
+  id: string
+  title: string
+  meeting_date: string
+  location: string | null
+  agenda: string | null
+  minutes: string | null
+  status: MeetingStatus
+  created_by: string | null
+  created_at: string
+  ca_meeting_attendees?: { member_id: string; present: boolean; profiles?: Pick<Profile, 'full_name' | 'alias'> }[]
+}
+
+export interface CAVote {
+  id: string
+  title: string
+  description: string | null
+  meeting_id: string | null
+  deadline: string | null
+  status: 'open' | 'closed' | 'cancelled'
+  quorum_required: number
+  created_by: string | null
+  created_at: string
+  ca_vote_responses?: { member_id: string; response: VoteResponse; comment: string | null }[]
+}
+
+export interface CADocument {
+  id: string
+  title: string
+  category: DocumentCategory
+  storage_path: string
+  file_name: string
+  file_size: number | null
+  meeting_id: string | null
+  uploaded_by: string | null
+  created_at: string
+  profiles?: Pick<Profile, 'full_name' | 'alias'>
+}
+
 export interface CATreasury {
   id: string
   amount: number
