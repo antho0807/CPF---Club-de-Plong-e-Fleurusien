@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit2, UserX, Phone, Mail, Calendar, FileText, Award, AlertCircle, Waves } from 'lucide-react'
+import { ArrowLeft, Edit2, UserX, Phone, Mail, Calendar, FileText, Award, AlertCircle, Waves, Trash2, Loader2 } from 'lucide-react'
 import { AvatarDisplay } from '../components/members/AvatarDisplay'
 import { useMember, useMembers } from '../hooks/useMembers'
 import { useDocuments } from '../hooks/useDocuments'
@@ -83,6 +83,10 @@ export function MemberProfile() {
   const { documents, refetch: refetchDocs, uploadDocument, deleteDocument } = useDocuments(id)
   const { profile: currentUser, isAdmin, refreshProfile } = useAuth()
   const [showEdit, setShowEdit] = useState(false)
+  const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'code'>('idle')
+  const [deleteCode, setDeleteCode] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const isOwnProfile = currentUser?.id === id
   const canEdit = isAdmin || isOwnProfile
@@ -136,6 +140,16 @@ export function MemberProfile() {
             }}
           >
             {member.is_ca ? '🏛 Retirer du CA' : '🏛 Ajouter au CA'}
+          </Button>
+        )}
+        {isAdmin && !isOwnProfile && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 text-red-600 border-red-200 hover:bg-red-50"
+            onClick={() => setDeleteStep('confirm')}
+          >
+            <Trash2 className="h-4 w-4" /> Supprimer le compte
           </Button>
         )}
         {isAdmin && member.is_active && (
@@ -278,6 +292,64 @@ export function MemberProfile() {
       </Tabs>
 
       {/* Edit dialog */}
+      {/* Dialog suppression définitive (admin) */}
+      <Dialog open={deleteStep !== 'idle'} onOpenChange={(o) => { if (!o) { setDeleteStep('idle'); setDeleteCode(''); setDeleteError(null) } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-red-700">Supprimer le compte de {member.full_name}</DialogTitle>
+          </DialogHeader>
+          {deleteStep === 'confirm' && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Cette action est <strong>irréversible</strong>. Un code de confirmation sera envoyé à votre adresse email ({currentUser?.email}).
+              </p>
+              {deleteError && <p className="text-xs text-red-600">{deleteError}</p>}
+              <div className="flex gap-2">
+                <Button size="sm" disabled={deleteLoading} className="bg-red-600 hover:bg-red-700 text-white gap-2"
+                  onClick={async () => {
+                    setDeleteLoading(true); setDeleteError(null)
+                    const { error } = await supabase.functions.invoke('request-delete-account', {
+                      body: { target_user_id: member.id },
+                    })
+                    if (error) { setDeleteError(error.message); setDeleteLoading(false); return }
+                    setDeleteStep('code'); setDeleteLoading(false)
+                  }}>
+                  {deleteLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Envoi…</> : 'Recevoir le code de confirmation'}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setDeleteStep('idle')}>Annuler</Button>
+              </div>
+            </div>
+          )}
+          {deleteStep === 'code' && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">Saisissez le code reçu par email :</p>
+              <input
+                className="w-32 text-2xl font-mono tracking-widest text-center border rounded-lg p-2 block"
+                placeholder="000000" maxLength={6}
+                value={deleteCode}
+                onChange={(e) => setDeleteCode(e.target.value.replace(/\D/g, ''))}
+              />
+              {deleteError && <p className="text-xs text-red-600">{deleteError}</p>}
+              <div className="flex gap-2">
+                <Button size="sm" disabled={deleteLoading || deleteCode.length !== 6}
+                  className="bg-red-600 hover:bg-red-700 text-white gap-2"
+                  onClick={async () => {
+                    setDeleteLoading(true); setDeleteError(null)
+                    const { error } = await supabase.functions.invoke('confirm-delete-account', {
+                      body: { user_id: member.id, token: deleteCode },
+                    })
+                    if (error) { setDeleteError('Code invalide ou expiré.'); setDeleteLoading(false); return }
+                    navigate('/membres')
+                  }}>
+                  {deleteLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Suppression…</> : 'Supprimer définitivement'}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => { setDeleteStep('idle'); setDeleteCode('') }}>Annuler</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
