@@ -72,13 +72,15 @@ export function useMembers() {
   }
 
   async function updateMember(id: string, updates: Partial<Profile>): Promise<void> {
-    // Exclure les champs auto-gérés (created_at, id) du payload Update
     const { id: _id, created_at: _c, ...updatable } = updates as Record<string, unknown>
-    const { error: err } = await supabase
+    const { data, error: err, count } = await supabase
       .from('profiles')
       .update(updatable as TablesUpdate<'profiles'>)
       .eq('id', id)
-    if (err) throw err
+      .select()
+    console.log('[updateMember]', { id, updatable, data, err, count })
+    if (err) throw new Error(err.message + ' (code: ' + err.code + ')')
+    if (!data || data.length === 0) throw new Error('Mise à jour refusée par la base de données — vérifiez la politique RLS profiles UPDATE')
     await refetchMembers()
   }
 
