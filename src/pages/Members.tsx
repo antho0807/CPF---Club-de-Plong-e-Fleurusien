@@ -59,6 +59,7 @@ function CAManagement() {
   const { members, loading, updateMember } = useMembers()
   const [search, setSearch] = useState('')
   const [toggling, setToggling] = useState<string | null>(null)
+  const [toggleError, setToggleError] = useState<string | null>(null)
 
   const caMembers = useMemo(() => members.filter((m) => m.is_ca), [members])
   const eligible = useMemo(
@@ -71,8 +72,11 @@ function CAManagement() {
 
   async function toggleCA(member: Profile) {
     setToggling(member.id)
+    setToggleError(null)
     try {
       await updateMember(member.id, { is_ca: !member.is_ca })
+    } catch (e) {
+      setToggleError('Erreur : ' + (e instanceof Error ? e.message : 'Vérifiez les droits RLS (migration 026)'))
     } finally {
       setToggling(null)
     }
@@ -88,6 +92,11 @@ function CAManagement() {
 
   return (
     <div className="space-y-6">
+      {toggleError && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+          {toggleError}
+        </div>
+      )}
       {/* Membres actuels du CA */}
       <div>
         <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
